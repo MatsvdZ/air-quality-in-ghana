@@ -4,6 +4,17 @@ body {
     padding: 0;
 }
 
+h1 {
+    font-size: 1.5rem;
+}
+
+.kumasi-map {
+    height: 22rem;
+    width: 100%;
+    margin-top: 1.25rem;
+    border-radius: 0.5rem;
+}
+
 header nav ul {
     display: flex;
     gap: 1rem;
