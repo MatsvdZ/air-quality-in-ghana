@@ -34,6 +34,12 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/map", (req, res) => {
+  res.render("map", {
+    title: "Map of Air Quality Ghana"
+  });
+});
+
 app.get("/api/no2", async (req, res) => {
   const data = await Measurement.find({})
     .sort({ start: -1 })
