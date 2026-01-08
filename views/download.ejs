@@ -1,0 +1,45 @@
+<section class="page">
+  <div class="page__header">
+    <h1 class="page__title"><%= title %></h1>
+    <p class="page__subtitle">
+      Download the latest dataset in the format you need.
+    </p>
+  </div>
+
+  <div class="grid">
+    <article class="card">
+      <div class="card__top">
+        <h2 class="card__title">NO₂ measurements</h2>
+        <p class="card__meta">Time series, per tube/location and time window.</p>
+      </div>
+
+      <div class="btnrow">
+        <a class="btn" href="/download/no2.xlsx" download>
+          Download Excel (.xlsx)
+        </a>
+        <a class="btn btn--ghost" href="/download/no2.json" download>
+          Download JSON (.json)
+        </a>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="card__top">
+        <h2 class="card__title">Locations</h2>
+        <p class="card__meta">Location metadata: name, latitude, longitude, description.</p>
+      </div>
+
+      <div class="btnrow">
+        <a class="btn" href="/download/locations.json" download>
+          Download JSON (.json)
+        </a>
+      </div>
+    </article>
+  </div>
+
+  <div class="hint">
+    <p class="hint__text">
+      Tip: Excel is easiest for analysis in spreadsheet tools. JSON is best for developers and APIs.
+    </p>
+  </div>
+</section>
