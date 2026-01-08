@@ -4,9 +4,8 @@ const mongoose = require("mongoose");
 const expressLayouts = require("express-ejs-layouts");
 const path = require("path");
 
-// Modellen importeren
+const mapController = require("./src/controllers/mapController");
 const Measurement = require("./src/models/measurement");
-const Location = require("./src/models/location");
 
 const app = express();
 const PORT = 3000;
@@ -29,8 +28,9 @@ connectDB();
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(expressLayouts);
-app.set("layout", "layout"); // Verwijst naar views/layout.ejs
-app.use(express.static("public")); // Voor css en js bestanden
+app.set("layout", "layout");
+app.use(express.static("public"));
+
 
 // ---------------- ROUTES ----------------
 
@@ -48,19 +48,10 @@ app.get("/map", (req, res) => {
   });
 });
 
-// API: Locaties ophalen (Voor de kaart)
-app.get("/api/locations", async (req, res) => {
-  try {
-    const locations = await Location.find({});
-    console.log(`📡 API: Sending ${locations.length} locations to client`);
-    res.json(locations);
-  } catch (err) {
-    console.error("❌ API Error (Locations):", err);
-    res.status(500).json({ error: "Could not fetch locations" });
-  }
-});
+// API: Locaties ophalen (via Controller)
+app.get("/api/locations", mapController.getLocations);
 
-// API: NO2 Data ophalen (Voor de test JSON)
+// API: NO2 Data ophalen (Direct uit Database)
 app.get("/api/no2", async (req, res) => {
   try {
     const data = await Measurement.find({})
@@ -75,6 +66,9 @@ app.get("/api/no2", async (req, res) => {
     res.status(500).json({ error: "Could not fetch measurements" });
   }
 });
+
+// 404 Handler (Als pagina niet bestaat)
+app.use((req, res) => res.status(404).send("<h1>404 - Pagina niet gevonden</h1>"));
 
 // Start de Server
 app.listen(PORT, () => {
