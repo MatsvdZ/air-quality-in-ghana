@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!mapElement) return;
 
     // 1. Kaart initialiseren (Startpunt Kumasi)
-    const map = L.map(mapElement).setView([6.6625, -1.6104], 12);
+window.__leafletMap = L.map(mapElement).setView([6.6625, -1.6104], 12);
+const map = window.__leafletMap;
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
     let allLocations = [];

@@ -33,27 +33,31 @@ app.use(expressLayouts);
 app.set("layout", "layout");
 app.use(express.static("public"));
 
-
 // ---------------- ROUTES ----------------
+
+
+
+
+app.use((req, res, next) => {
+  res.locals.activePage = ""; // default zodat EJS nooit crasht
+  next();
+});
+
 
 // Home Pagina
 app.get("/", (req, res) => {
-  res.render("index", {
-    title: "Air Quality Ghana"
-  });
+  res.locals.activePage = "home";
+  res.render("index", { title: "Home" });
 });
 
-// Map Pagina
 app.get("/map", (req, res) => {
-  res.render("map", {
-    title: "Map of Air Quality Ghana"
-  });
+  res.locals.activePage = "map";
+  res.render("map", { title: "Map" });
 });
 
-
-// Download Pagina
 app.get("/download", (req, res) => {
-  res.render("download", { title: "Download data" });
+  res.locals.activePage = "download";
+  res.render("download", { title: "Download" });
 });
 
 app.get("/download/no2.json", async (req, res) => {
@@ -61,7 +65,10 @@ app.get("/download/no2.json", async (req, res) => {
     const data = await Measurement.find({}).sort({ start: -1 }).lean();
 
     res.setHeader("Content-Type", "application/json");
-    res.setHeader("Content-Disposition", 'attachment; filename="no2-data.json"');
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="no2-data.json"'
+    );
 
     res.send(JSON.stringify(data, null, 2));
   } catch (err) {
@@ -85,17 +92,22 @@ app.get("/download/no2.xlsx", async (req, res) => {
     { header: "Remarks", key: "remarks" },
   ];
 
-  measurements.forEach(m => ws.addRow({
-    tubeId: m.tubeId,
-    locationId: m.locationId,
-    period: m.period,
-    start: m.start,
-    end: m.end,
-    no2: m.no2,
-    remarks: m.remarks
-  }));
+  measurements.forEach((m) =>
+    ws.addRow({
+      tubeId: m.tubeId,
+      locationId: m.locationId,
+      period: m.period,
+      start: m.start,
+      end: m.end,
+      no2: m.no2,
+      remarks: m.remarks,
+    })
+  );
 
-  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
   res.setHeader("Content-Disposition", 'attachment; filename="no2-data.xlsx"');
 
   await wb.xlsx.write(res);
@@ -131,7 +143,9 @@ app.get("/api/no2", async (req, res) => {
 });
 
 // 404 Handler (Als pagina niet bestaat)
-app.use((req, res) => res.status(404).send("<h1>404 - Pagina niet gevonden</h1>"));
+app.use((req, res) =>
+  res.status(404).send("<h1>404 - Pagina niet gevonden</h1>")
+);
 
 // Start de Server
 app.listen(PORT, () => {

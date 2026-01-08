@@ -1,0 +1,27 @@
+<% const page = typeof activePage !== 'undefined' ? activePage : '' %>
+
+<nav class="bottom-nav" aria-label="Bottom navigation">
+  <a
+    href="/"
+    class="bottom-nav__item <%= page === 'home' ? 'is-active' : '' %>"
+  >
+ 
+    <span class="bottom-nav__label">Home</span>
+  </a>
+
+  <a
+    href="/download"
+    class="bottom-nav__fab <%= page === 'download' ? 'is-active' : '' %>"
+    aria-label="Download"
+  >
+    +
+  </a>
+
+  <a
+    href="/map"
+    class="bottom-nav__item <%= page === 'map' ? 'is-active' : '' %>"
+  >
+
+    <span class="bottom-nav__label">Map</span>
+  </a>
+</nav>
