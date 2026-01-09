@@ -1,0 +1,47 @@
+<section class="container">
+  <header class="page-head">
+    <h1 class="h1"><%= title %></h1>
+    <p class="muted">Search, edit or delete existing locations.</p>
+  </header>
+
+  <form class="card form" method="GET" action="/admin/locations" style="margin-bottom:12px;">
+    <label class="field">
+      <span class="field__label">Search</span>
+      <input class="input" name="q" value="<%= q || '' %>" placeholder="Search by Location ID or name">
+    </label>
+
+    <div class="btnrow">
+      <button class="btn btn--primary" type="submit">Search</button>
+      <a class="btn btn--ghost" href="/admin/locations">Reset</a>
+      <a class="btn btn--ghost" href="/admin">Back</a>
+    </div>
+  </form>
+
+  <div class="btnrow" style="margin-bottom:12px;">
+    <a class="btn btn--primary" href="/admin/locations/new">Add location</a>
+  </div>
+
+  <div class="card stack">
+    <% if (!locations.length) { %>
+      <p class="muted">No locations found.</p>
+    <% } %>
+
+    <% locations.forEach(l => { %>
+      <div class="kpi__box">
+        <p style="margin:0; font-weight:900;"><%= l.locationId %> — <%= l.name %></p>
+        <p class="muted" style="margin:6px 0 0;">
+          <%= l.lat %>, <%= l.lon %><br>
+          <%= l.description || '' %>
+        </p>
+
+        <div class="btnrow" style="margin-top:10px;">
+          <a class="btn btn--ghost" href="/admin/locations/<%= l._id %>/edit">Edit</a>
+
+          <form method="POST" action="/admin/locations/<%= l._id %>/delete" onsubmit="return confirm('Delete this location AND all related measurements?');">
+            <button class="btn btn--danger" type="submit">Delete</button>
+          </form>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>

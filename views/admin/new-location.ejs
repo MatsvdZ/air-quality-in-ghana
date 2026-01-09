@@ -1,0 +1,44 @@
+<section class="container">
+  <header class="page-head">
+    <h1 class="h1"><%= title %></h1>
+    <p class="muted">Create a new map point (latitude/longitude) for Kumasi.</p>
+  </header>
+
+  <% if (error) { %>
+    <div class="alert"><%= error %></div>
+  <% } %>
+
+  <form class="card form" method="POST" action="/admin/locations">
+    <label class="field">
+      <span class="field__label">Location ID</span>
+      <input class="input" name="locationId" required placeholder="KU_001">
+    </label>
+
+    <label class="field">
+      <span class="field__label">Name</span>
+      <input class="input" name="name" required placeholder="Location name">
+    </label>
+
+    <div class="btnrow">
+      <label class="field" style="flex:1;">
+        <span class="field__label">Latitude</span>
+        <input class="input" name="lat" required inputmode="decimal" placeholder="6.6625">
+      </label>
+
+      <label class="field" style="flex:1;">
+        <span class="field__label">Longitude</span>
+        <input class="input" name="lon" required inputmode="decimal" placeholder="-1.6104">
+      </label>
+    </div>
+
+    <label class="field">
+      <span class="field__label">Description</span>
+      <textarea class="input" name="description" placeholder="Optional description"></textarea>
+    </label>
+
+    <div class="btnrow">
+      <button class="btn btn--primary" type="submit">Save location</button>
+      <a class="btn btn--ghost" href="/admin">Cancel</a>
+    </div>
+  </form>
+</section>

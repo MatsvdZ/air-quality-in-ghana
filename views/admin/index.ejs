@@ -1,0 +1,37 @@
+<section class="container">
+  <header class="page-head">
+    <h1 class="h1"><%= title %></h1>
+    <p class="muted">Add locations and measurements for Kumasi.</p>
+  </header>
+
+  <div class="card stack">
+    <div class="kpi">
+      <div class="kpi__box">
+        <p class="kpi__label">Locations</p>
+        <p class="kpi__value"><%= locationCount %></p>
+      </div>
+      <div class="kpi__box">
+        <p class="kpi__label">Measurements</p>
+        <p class="kpi__value"><%= measurementCount %></p>
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <a class="btn btn--primary" href="/admin/locations/new">Add location</a>
+      <a class="btn btn--ghost" href="/admin/measurements/new"
+        >Add measurement</a
+      >
+    </div>
+
+    <div class="btnrow" style="margin-top: 10px">
+      <a class="btn btn--ghost" href="/admin/locations">Manage locations</a>
+      <a class="btn btn--ghost" href="/admin/measurements"
+        >Manage measurements</a
+      >
+    </div>
+
+    <form method="POST" action="/admin/logout">
+      <button class="btn btn--danger btn--full" type="submit">Logout</button>
+    </form>
+  </div>
+</section>

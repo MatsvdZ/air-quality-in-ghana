@@ -1,0 +1,93 @@
+<section class="container">
+  <header class="page-head">
+    <h1 class="h1"><%= title %></h1>
+    <p class="muted">Filter and browse measurements.</p>
+  </header>
+
+  <form class="card form" method="GET" action="/admin/measurements" style="margin-bottom:12px;">
+    <label class="field">
+      <span class="field__label">Search (tube or location)</span>
+      <input class="input" name="q" value="<%= q || '' %>" placeholder="e.g. B11 or KU_017">
+    </label>
+
+    <label class="field">
+      <span class="field__label">Location</span>
+      <select class="input" name="locationId">
+        <option value="">All</option>
+        <% locationIds.forEach(id => { %>
+          <option value="<%= id %>" <%= (id === locationId ? 'selected' : '') %>><%= id %></option>
+        <% }) %>
+      </select>
+    </label>
+
+    <label class="field">
+      <span class="field__label">Period (YYYY-MM)</span>
+      <select class="input" name="period">
+        <option value="">All</option>
+        <% periods.forEach(p => { %>
+          <option value="<%= p %>" <%= (p === period ? 'selected' : '') %>><%= p %></option>
+        <% }) %>
+      </select>
+    </label>
+
+    <input type="hidden" name="page" value="1">
+
+    <div class="btnrow">
+      <button class="btn btn--primary" type="submit">Apply</button>
+      <a class="btn btn--ghost" href="/admin/measurements">Reset</a>
+      <a class="btn btn--ghost" href="/admin">Back</a>
+    </div>
+  </form>
+
+  <div class="btnrow" style="margin-bottom:12px;">
+    <a class="btn btn--primary" href="/admin/measurements/new">Add measurement</a>
+  </div>
+
+  <div class="card stack">
+    <p class="muted" style="margin:0;">
+      Showing <b><%= measurements.length %></b> of <b><%= total %></b> results • Page <b><%= page %></b> / <b><%= totalPages %></b>
+    </p>
+
+    <% if (!measurements.length) { %>
+      <p class="muted">No measurements found.</p>
+    <% } %>
+
+    <% measurements.forEach(m => { %>
+      <div class="kpi__box">
+        <p style="margin:0; font-weight:900;">
+          <%= m.locationId %> • <%= m.period %> • NO₂: <%= m.no2 %>
+        </p>
+        <p class="muted" style="margin:6px 0 0;">
+          Tube: <%= m.tubeId || '-' %>
+        </p>
+
+        <div class="btnrow" style="margin-top:10px;">
+          <a class="btn btn--ghost" href="/admin/measurements/<%= m._id %>/edit">Edit</a>
+
+          <form method="POST" action="/admin/measurements/<%= m._id %>/delete" onsubmit="return confirm('Delete this measurement?');">
+            <button class="btn btn--danger" type="submit">Delete</button>
+          </form>
+        </div>
+      </div>
+    <% }) %>
+
+    <!-- Pagination -->
+    <div class="btnrow" style="margin-top:6px;">
+      <% const qs = new URLSearchParams({ q: q || '', locationId: locationId || '', period: period || '' }); %>
+
+      <% if (page > 1) { %>
+        <% qs.set('page', String(page - 1)); %>
+        <a class="btn btn--ghost" href="/admin/measurements?<%= qs.toString() %>">← Prev</a>
+      <% } else { %>
+        <span class="btn btn--ghost" style="opacity:.5; pointer-events:none;">← Prev</span>
+      <% } %>
+
+      <% if (page < totalPages) { %>
+        <% qs.set('page', String(page + 1)); %>
+        <a class="btn btn--ghost" href="/admin/measurements?<%= qs.toString() %>">Next →</a>
+      <% } else { %>
+        <span class="btn btn--ghost" style="opacity:.5; pointer-events:none;">Next →</span>
+      <% } %>
+    </div>
+  </div>
+</section>

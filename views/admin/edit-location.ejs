@@ -1,0 +1,42 @@
+<section class="container">
+  <header class="page-head">
+    <h1 class="h1"><%= title %></h1>
+    <p class="muted">Update location details.</p>
+  </header>
+
+  <% if (error) { %><div class="alert"><%= error %></div><% } %>
+
+  <form class="card form" method="POST" action="/admin/locations/<%= location._id %>">
+    <label class="field">
+      <span class="field__label">Location ID</span>
+      <input class="input" name="locationId" required value="<%= location.locationId %>">
+    </label>
+
+    <label class="field">
+      <span class="field__label">Name</span>
+      <input class="input" name="name" required value="<%= location.name %>">
+    </label>
+
+    <div class="btnrow">
+      <label class="field" style="flex:1;">
+        <span class="field__label">Latitude</span>
+        <input class="input" name="lat" required value="<%= location.lat %>">
+      </label>
+
+      <label class="field" style="flex:1;">
+        <span class="field__label">Longitude</span>
+        <input class="input" name="lon" required value="<%= location.lon %>">
+      </label>
+    </div>
+
+    <label class="field">
+      <span class="field__label">Description</span>
+      <textarea class="input" name="description"><%= location.description || "" %></textarea>
+    </label>
+
+    <div class="btnrow">
+      <button class="btn btn--primary" type="submit">Save</button>
+      <a class="btn btn--ghost" href="/admin/locations">Cancel</a>
+    </div>
+  </form>
+</section>

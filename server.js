@@ -10,6 +10,9 @@ const Measurement = require("./src/models/measurement");
 const Location = require("./src/models/location");
 
 const app = express();
+const session = require("express-session");
+const MongoStore = require("connect-mongo").default;
+
 const PORT = 3000;
 
 // 1. Verbinden met Database
@@ -33,6 +36,36 @@ app.use(expressLayouts);
 app.set("layout", "layout");
 app.use(express.static("public"));
 
+
+
+// body parsing voor forms
+app.use(express.urlencoded({ extended: true }));
+
+// sessions
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      // secure: true, // aanzetten bij https deploy
+      maxAge: 1000 * 60 * 60 * 8, // 8 uur
+    },
+  })
+);
+
+// auth guard
+function requireAdmin(req, res, next) {
+  if (req.session && req.session.isAdmin) return next();
+  return res.redirect("/admin/login");
+}
+
+
+
+
 // ---------------- ROUTES ----------------
 
 
@@ -49,6 +82,321 @@ app.get("/", (req, res) => {
   res.locals.activePage = "home";
   res.render("index", { title: "Home" });
 });
+
+// Admin Pagina
+app.get("/admin/login", (req, res) => {
+  res.locals.activePage = "";
+  res.render("admin/login", { title: "Admin login", error: null });
+});
+
+//login route
+app.post("/admin/login", (req, res) => {
+  const { username, password } = req.body;
+
+  if (
+    username === process.env.ADMIN_USERNAME &&
+    password === process.env.ADMIN_PASSWORD
+  ) {
+    req.session.isAdmin = true;
+    return res.redirect("/admin");
+  }
+
+  return res.status(401).render("admin/login", {
+    title: "Admin login",
+    error: "Incorrect username or password",
+  });
+});
+
+//logout route
+app.post("/admin/logout", (req, res) => {
+  req.session.destroy(() => res.redirect("/"));
+});
+
+
+app.get("/admin", requireAdmin, async (req, res) => {
+  const locationCount = await Location.countDocuments();
+  const measurementCount = await Measurement.countDocuments();
+
+  res.render("admin/index", {
+    title: "Admin",
+    locationCount,
+    measurementCount,
+  });
+});
+
+
+app.get("/admin/locations/new", requireAdmin, (req, res) => {
+  res.render("admin/new-location", { title: "Add location", error: null });
+});
+
+
+app.post("/admin/locations", requireAdmin, async (req, res) => {
+  try {
+    const { locationId, name, lat, lon, description } = req.body;
+
+    const latNum = Number(lat);
+    const lonNum = Number(lon);
+
+    if (!locationId || !name || Number.isNaN(latNum) || Number.isNaN(lonNum)) {
+      return res.status(400).render("admin/new-location", {
+        title: "Add location",
+        error: "Fill in Location ID, name, latitude and longitude.",
+      });
+    }
+
+    await Location.create({
+      locationId: locationId.trim(),
+      name: name.trim(),
+      lat: latNum,
+      lon: lonNum,
+      description: (description || "").trim(),
+    });
+
+    res.redirect("/admin");
+  } catch (err) {
+    res.status(500).render("admin/new-location", {
+      title: "Add location",
+      error: err.message,
+    });
+  }
+});
+
+app.get("/admin/measurements/new", requireAdmin, async (req, res) => {
+  const locations = await Location.find({}).sort({ locationId: 1 }).lean();
+
+  res.render("admin/new-measurement", {
+    title: "Add measurement",
+    error: null,
+    locations,
+  });
+});
+
+app.post("/admin/measurements", requireAdmin, async (req, res) => {
+  try {
+    const { locationId, tubeId, period, no2 } = req.body;
+
+    // period check YYYY-MM
+    const periodOk = /^\d{4}-\d{2}$/.test(period || "");
+    const no2Num = Number(no2);
+
+    if (!locationId || !periodOk || Number.isNaN(no2Num)) {
+      const locations = await Location.find({}).sort({ locationId: 1 }).lean();
+      return res.status(400).render("admin/new-measurement", {
+        title: "Add measurement",
+        error: "Choose a location, use period YYYY-MM, and enter a NO₂ number.",
+        locations,
+      });
+    }
+
+    await Measurement.create({
+      locationId: locationId.trim(),
+      tubeId: (tubeId || "").trim() || null,
+      period: period.trim(),          // ✅ als string YYYY-MM
+      no2: no2Num,
+      // start/end optioneel; je kunt ze leeg laten voor deze admin flow
+      start: null,
+      end: null,
+      remarks: null,
+    });
+
+    res.redirect("/admin");
+  } catch (err) {
+    const locations = await Location.find({}).sort({ locationId: 1 }).lean();
+    res.status(500).render("admin/new-measurement", {
+      title: "Add measurement",
+      error: err.message,
+      locations,
+    });
+  }
+});
+
+// LIST: locaties
+app.get("/admin/locations", requireAdmin, async (req, res) => {
+  const q = (req.query.q || "").trim();
+
+  const filter = q
+    ? {
+        $or: [
+          { locationId: { $regex: q, $options: "i" } },
+          { name: { $regex: q, $options: "i" } },
+        ],
+      }
+    : {};
+
+  const locations = await Location.find(filter).sort({ locationId: 1 }).lean();
+
+  res.render("admin/locations", {
+    title: "Locations",
+    locations,
+    q,
+  });
+});
+
+// EDIT FORM: locatie
+app.get("/admin/locations/:id/edit", requireAdmin, async (req, res) => {
+  const location = await Location.findById(req.params.id).lean();
+  if (!location) return res.status(404).send("Location not found");
+  res.render("admin/edit-location", { title: "Edit location", location, error: null });
+});
+
+// EDIT POST: locatie opslaan
+app.post("/admin/locations/:id", requireAdmin, async (req, res) => {
+  try {
+    const { locationId, name, lat, lon, description } = req.body;
+
+    const latNum = Number(lat);
+    const lonNum = Number(lon);
+
+    if (!locationId || !name || Number.isNaN(latNum) || Number.isNaN(lonNum)) {
+      const location = await Location.findById(req.params.id).lean();
+      return res.status(400).render("admin/edit-location", {
+        title: "Edit location",
+        location,
+        error: "Fill in Location ID, name, latitude and longitude.",
+      });
+    }
+
+    await Location.findByIdAndUpdate(req.params.id, {
+      locationId: locationId.trim(),
+      name: name.trim(),
+      lat: latNum,
+      lon: lonNum,
+      description: (description || "").trim(),
+    });
+
+    res.redirect("/admin/locations");
+  } catch (err) {
+    const location = await Location.findById(req.params.id).lean();
+    res.status(500).render("admin/edit-location", { title: "Edit location", location, error: err.message });
+  }
+});
+
+// DELETE: locatie (en optioneel gekoppelde metingen)
+app.post("/admin/locations/:id/delete", requireAdmin, async (req, res) => {
+  const loc = await Location.findById(req.params.id).lean();
+  if (!loc) return res.redirect("/admin/locations");
+
+  // 1) delete location
+  await Location.findByIdAndDelete(req.params.id);
+
+  // 2) (aanrader) delete measurements that reference this locationId
+  await Measurement.deleteMany({ locationId: loc.locationId });
+
+  res.redirect("/admin/locations");
+});
+
+// LIST: metingen (laatste 300)
+app.get("/admin/measurements", requireAdmin, async (req, res) => {
+  const q = (req.query.q || "").trim();              // search tube/location
+  const locationId = (req.query.locationId || "").trim();
+  const period = (req.query.period || "").trim();    // YYYY-MM
+  const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+  const perPage = 25;
+
+  const filter = {};
+
+  if (locationId) filter.locationId = locationId;
+  if (period) filter.period = period;
+
+  if (q) {
+    filter.$or = [
+      { tubeId: { $regex: q, $options: "i" } },
+      { locationId: { $regex: q, $options: "i" } },
+    ];
+  }
+
+  const total = await Measurement.countDocuments(filter);
+  const totalPages = Math.max(Math.ceil(total / perPage), 1);
+  const safePage = Math.min(page, totalPages);
+
+  const measurements = await Measurement.find(filter)
+    .sort({ period: -1, locationId: 1 })
+    .skip((safePage - 1) * perPage)
+    .limit(perPage)
+    .lean();
+
+  // dropdowns vullen
+  const locationIds = await Location.find({}, { locationId: 1, _id: 0 })
+    .sort({ locationId: 1 })
+    .lean();
+
+  // unieke periods uit measurements (kan ook uit data komen)
+  const periods = await Measurement.distinct("period");
+
+  res.render("admin/measurements", {
+    title: "Measurements",
+    measurements,
+    q,
+    locationId,
+    period,
+    locationIds: locationIds.map(x => x.locationId),
+    periods: periods.sort().reverse(),
+    page: safePage,
+    totalPages,
+    total,
+    perPage,
+  });
+});
+
+// EDIT FORM: meting
+app.get("/admin/measurements/:id/edit", requireAdmin, async (req, res) => {
+  const measurement = await Measurement.findById(req.params.id).lean();
+  if (!measurement) return res.status(404).send("Measurement not found");
+
+  const locations = await Location.find({}).sort({ locationId: 1 }).lean();
+  res.render("admin/edit-measurement", { title: "Edit measurement", measurement, locations, error: null });
+});
+
+// EDIT POST: meting opslaan
+app.post("/admin/measurements/:id", requireAdmin, async (req, res) => {
+  try {
+    const { locationId, tubeId, period, no2 } = req.body;
+
+    const periodOk = /^\d{4}-\d{2}$/.test(period || "");
+    const no2Num = Number(no2);
+
+    if (!locationId || !periodOk || Number.isNaN(no2Num)) {
+      const measurement = await Measurement.findById(req.params.id).lean();
+      const locations = await Location.find({}).sort({ locationId: 1 }).lean();
+      return res.status(400).render("admin/edit-measurement", {
+        title: "Edit measurement",
+        measurement,
+        locations,
+        error: "Choose a location, use period YYYY-MM, and enter a NO₂ number.",
+      });
+    }
+
+    await Measurement.findByIdAndUpdate(req.params.id, {
+      locationId: locationId.trim(),
+      tubeId: (tubeId || "").trim() || null,
+      period: period.trim(),
+      no2: no2Num,
+    });
+
+    res.redirect("/admin/measurements");
+  } catch (err) {
+    const measurement = await Measurement.findById(req.params.id).lean();
+    const locations = await Location.find({}).sort({ locationId: 1 }).lean();
+    res.status(500).render("admin/edit-measurement", {
+      title: "Edit measurement",
+      measurement,
+      locations,
+      error: err.message,
+    });
+  }
+});
+
+// DELETE: meting
+app.post("/admin/measurements/:id/delete", requireAdmin, async (req, res) => {
+  await Measurement.findByIdAndDelete(req.params.id);
+  res.redirect("/admin/measurements");
+});
+
+
+
+
+
+
 
 app.get("/map", (req, res) => {
   res.locals.activePage = "map";
