@@ -12,7 +12,7 @@ const app = express();
 const session = require("express-session");
 const MongoStore = require("connect-mongo").default;
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // 1. Verbinden met Database
 // Functie om verbinding te maken
@@ -548,5 +548,5 @@ app.use((req, res) =>
 
 // Start de Server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

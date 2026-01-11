@@ -1,4 +1,13 @@
 {
+    "name": "air-quality-in-ghana",
+    "version": "1.0.0",
+    "description": "A web application to monitor and display air quality data in Ghana.",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js"
+    },
+
   "dependencies": {
     "connect-mongo": "^6.0.0",
     "dotenv": "^17.2.3",
