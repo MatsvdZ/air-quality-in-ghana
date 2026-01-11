@@ -5,7 +5,6 @@ const expressLayouts = require("express-ejs-layouts");
 const path = require("path");
 const ExcelJS = require("exceljs");
 
-const mapController = require("./src/controllers/mapController");
 const Measurement = require("./src/models/measurement");
 const Location = require("./src/models/location");
 
@@ -471,8 +470,60 @@ app.get("/download/locations.json", async (req, res) => {
   res.send(JSON.stringify(data, null, 2));
 });
 
-// API: Locaties ophalen (via Controller)
-app.get("/api/locations", mapController.getLocations);
+// API: Data voor de kaart
+app.get("/api/locations", async (req, res) => {
+    try {
+        // 1. Haal data op
+        const [locations, measurements] = await Promise.all([
+            Location.find({}).lean(),
+            Measurement.find({}).lean()
+        ]);
+
+        // Hulpfunctie om IDs te normaliseren
+        const cleanId = (id) => String(id || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+
+        // 2. Maak een index van metingen per locatie
+        const measurementsByLoc = new Map();
+
+        measurements.forEach(m => {
+            const locId = cleanId(m.locationId);
+            if (!measurementsByLoc.has(locId)) {
+                measurementsByLoc.set(locId, []);
+            }
+            measurementsByLoc.get(locId).push(m);
+        });
+
+        // 3. Bouw het resultaat
+        const result = locations.map(loc => {
+            const locId = cleanId(loc.locationId);
+            const myData = measurementsByLoc.get(locId) || [];
+
+            // Sorteer historie op datum
+            myData.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+            return {
+                name: loc.name,
+                lat: loc.lat,
+                lon: loc.lon,
+                description: loc.description,
+                history: myData.map(m => ({
+                    // Formatteer datum naar YYYY-MM
+                    dateStr: m.period ? String(m.period) : 
+                             (m.start ? new Date(m.start).toISOString().slice(0, 7) : "Unknown"),
+                    rawDate: m.start,
+                    val: m.no2,
+                    tubeId: m.tubeId,
+                    remarks: m.remarks
+                }))
+            };
+        });
+
+        res.json(result);
+    } catch (err) {
+        console.error("API Fout:", err);
+        res.status(500).json({ error: "Internal Server Error", data: [] });
+    }
+});
 
 // API: NO2 Data ophalen (Direct uit Database)
 app.get("/api/no2", async (req, res) => {
@@ -492,7 +543,7 @@ app.get("/api/no2", async (req, res) => {
 
 // 404 Handler (Als pagina niet bestaat)
 app.use((req, res) =>
-  res.status(404).send("<h1>404 - Pagina niet gevonden</h1>")
+  res.status(404).send("<h1>404 - Page not found</h1>")
 );
 
 // Start de Server

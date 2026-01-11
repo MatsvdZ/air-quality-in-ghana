@@ -47,7 +47,7 @@ async function run() {
   console.log("✅ Connected to MongoDB");
 
   // 2️⃣ Load Excel file
-  const excelPath = path.join(__dirname, "../../data/source/latest.xlsx");
+  const excelPath = path.join(__dirname, "data", "source", "latest.xlsx");
 
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(excelPath);
@@ -95,7 +95,7 @@ async function run() {
     };
 
     // minimale validatie
-    if (!doc.locationId || !doc.start || doc.no2 == null) return;
+    if (!obj.location_id || !obj.startdatetime) return;
 
     measurements.push(doc);
   });
