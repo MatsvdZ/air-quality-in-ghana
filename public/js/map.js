@@ -73,15 +73,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let tubeId = '-';
                 let remarkHtml = '';
                 let radius = 10;
-
+                let explanation = '';
+                
                 if (m) {
                     tubeId = m.tubeId || '-';
                     radius = 12;
                     const numVal = Number(m.val);
 
                     if (!isNaN(numVal) && numVal > 0) {
-                        valueText = numVal;
+                        valueText = numVal.toFixed(2);
                         color = getColor(numVal);
+                        
+                        if (numVal > 40) {
+                            // "Boven de EU jaarnorm"
+                            explanation = '(Above EU annual limit)'; 
+                        } else if (numVal > 10) {
+                            // "Boven het WHO jaaradvies"
+                            explanation = '(Above WHO annual target)'; 
+                        } else {
+                            // "Binnen het WHO jaaradvies"
+                            explanation = '(Within WHO annual target)'; 
+                        }
+                        
                     } else {
                         radius = 10;
                         valueText = '-';
@@ -118,9 +131,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <hr style="margin:10px 0; border-top:1px solid #eee">
                     <div><b>Period:</b> ${period}</div>
                     <div><b>Tube ID:</b> ${tubeId}</div>
-                    <div>
-                        <b>NO₂ concentration:</b>
-                        <b style="color:${color}">${valueText}</b>
+                    <div style="margin-top: 4px;">
+                        <b>NO₂ concentration:</b><br>
+                        
+                        <span style="font-size:1.2em; font-weight:bold; color:${color}">
+                            ${valueText}
+                        </span>
+                        
+                        <small style="color:#666; font-size:0.85em; margin-left: 6px;">
+                            ${explanation}
+                        </small>
+                    </div>
                     </div>
                 `);
 
@@ -146,9 +167,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Kleurenschaal
+// Kleurenschaal (Gebaseerd op WHO 2021 & EU Normen)
 function getColor(value) {
-    if (value > 40) return '#e74c3c';
-    if (value > 10) return '#f39c12';
-    return '#27ae60';
+    // Rood: Boven de wettelijke EU grens (> 40)
+    if (value > 40) {
+        return '#e74c3c'; 
+    } 
+    // Oranje: Boven WHO advies (> 10), maar wettelijk toegestaan
+    else if (value > 10) {
+        return '#f39c12'; 
+    } 
+    // Groen: Gezond, voldoet aan WHO advies
+    else {
+        return '#27ae60'; 
+    }
 }
