@@ -4,7 +4,7 @@
     <input id="toggleView" type="checkbox" />
     <span class="switch__slider"></span>
   </label>
-  <span id="toggleText">Toon tabel</span>
+  <span id="toggleText">Show table</span>
 </div>
 
 <!-- MAP VIEW -->
@@ -96,11 +96,11 @@
       if (showTable) {
         mapView.classList.remove("is-active");
         tableView.classList.add("is-active");
-        toggleText.textContent = "Toon kaart";
+        toggleText.textContent = "Show map";
       } else {
         tableView.classList.remove("is-active");
         mapView.classList.add("is-active");
-        toggleText.textContent = "Toon tabel";
+        toggleText.textContent = "Show table";
 
         // Leaflet needs this when container was hidden
         if (window.__leafletMap && window.__leafletMap.invalidateSize) {
