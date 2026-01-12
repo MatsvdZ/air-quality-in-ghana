@@ -14,7 +14,14 @@
 
     <div class="slider-container">
       <p class="date-label">Loading...</p>
-      <input type="range" class="time-slider" min="0" max="10" step="1" value="0">
+      <input
+        type="range"
+        class="time-slider"
+        min="0"
+        max="10"
+        step="1"
+        value="0"
+      />
 
       <div class="slider-labels">
         <span>Oldest</span>
@@ -26,26 +33,36 @@
 
 <!-- TABLE VIEW -->
 <div id="tableView" class="view">
+  <label>
+    Period
+    <select id="periodFilter">
+      <option value="">(choose)</option>
+    </select>
+  </label>
   <div class="table-filters">
     <label>
-      Month
-      <select id="monthFilter">
-        <option value="">All</option>
-      </select>
+      Search
+      <input id="qFilter" type="text" placeholder="Location ID or name" />
     </label>
 
     <label>
       Min NO₂
-      <input id="minNo2" type="number" step="0.1" placeholder="e.g. 10">
+      <input id="minNo2" type="number" step="0.1" placeholder="e.g. 10" />
     </label>
 
     <label>
       Max NO₂
-      <input id="maxNo2" type="number" step="0.1" placeholder="e.g. 40">
+      <input id="maxNo2" type="number" step="0.1" placeholder="e.g. 40" />
     </label>
 
-    <button id="applyFilters" class="btn btn--ghost" type="button">Apply</button>
-    <button id="resetFilters" class="btn btn--ghost" type="button">Reset</button>
+    <label class="checkbox">
+      <input id="hideNoData" type="checkbox" />
+      Hide “No data”
+    </label>
+
+    <button id="resetFilters" class="btn btn--ghost" type="button">
+      Reset
+    </button>
   </div>
 
   <div class="table-wrap">
@@ -53,150 +70,49 @@
       <thead>
         <tr>
           <th>Location ID</th>
-          <th>Tube ID</th>
-          <th>Start</th>
-          <th>End</th>
+          <th>Name</th>
+          <th>Period</th>
           <th>NO₂</th>
         </tr>
       </thead>
       <tbody id="tableBody">
-        <tr><td colspan="5">Loading…</td></tr>
+        <tr>
+          <td colspan="4">Loading…</td>
+        </tr>
       </tbody>
     </table>
   </div>
+
+  <script>
+    // ----------------------------
+    // View toggle: map <-> table
+    // ----------------------------
+    const toggle = document.getElementById("toggleView");
+    const toggleText = document.getElementById("toggleText");
+    const mapView = document.getElementById("mapView");
+    const tableView = document.getElementById("tableView");
+
+    function setView(showTable) {
+      if (showTable) {
+        mapView.classList.remove("is-active");
+        tableView.classList.add("is-active");
+        toggleText.textContent = "Toon kaart";
+      } else {
+        tableView.classList.remove("is-active");
+        mapView.classList.add("is-active");
+        toggleText.textContent = "Toon tabel";
+
+        // Leaflet needs this when container was hidden
+        if (window.__leafletMap && window.__leafletMap.invalidateSize) {
+          setTimeout(() => window.__leafletMap.invalidateSize(), 150);
+        }
+      }
+    }
+
+    toggle.addEventListener("change", () => setView(toggle.checked));
+    setView(false);
+  </script>
+
+  <!-- Jouw bestaande Leaflet code blijft hier -->
+  <script src="/js/map.js"></script>
 </div>
-
-<script>
-  // ----------------------------
-  // View toggle: map <-> table
-  // ----------------------------
-  const toggle = document.getElementById("toggleView");
-  const toggleText = document.getElementById("toggleText");
-  const mapView = document.getElementById("mapView");
-  const tableView = document.getElementById("tableView");
-
-  function setView(showTable) {
-    if (showTable) {
-      mapView.classList.remove("is-active");
-      tableView.classList.add("is-active");
-      toggleText.textContent = "Toon kaart";
-    } else {
-      tableView.classList.remove("is-active");
-      mapView.classList.add("is-active");
-      toggleText.textContent = "Toon tabel";
-
-      // Leaflet needs this when container was hidden
-      if (window.__leafletMap && window.__leafletMap.invalidateSize) {
-        setTimeout(() => window.__leafletMap.invalidateSize(), 150);
-      }
-    }
-  }
-
-  toggle.addEventListener("change", () => setView(toggle.checked));
-  setView(false);
-
-  // ----------------------------
-  // Table + filters
-  // ----------------------------
-  let tableData = [];
-
-  function monthKeyFromStart(start) {
-    const d = new Date(start);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    return `${y}-${m}`;
-  }
-
-  function renderTable(rows) {
-    const tbody = document.getElementById("tableBody");
-
-    if (!rows || rows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5">No results</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = rows.map(r => {
-      const start = r.start ? new Date(r.start).toLocaleString() : "";
-      const end = r.end ? new Date(r.end).toLocaleString() : "";
-      const no2 = (r.no2 ?? "").toString();
-
-      return `
-        <tr>
-          <td>${r.locationId ?? ""}</td>
-          <td>${r.tubeId ?? ""}</td>
-          <td>${start}</td>
-          <td>${end}</td>
-          <td>${no2}</td>
-        </tr>
-      `;
-    }).join("");
-  }
-
-  function applyFilters() {
-    const month = document.getElementById("monthFilter").value;
-    const minRaw = document.getElementById("minNo2").value;
-    const maxRaw = document.getElementById("maxNo2").value;
-
-    const minVal = minRaw === "" ? null : Number(minRaw);
-    const maxVal = maxRaw === "" ? null : Number(maxRaw);
-
-    const filtered = tableData.filter(r => {
-      if (!r.start) return false;
-
-      // month filter
-      if (month) {
-        const mk = monthKeyFromStart(r.start);
-        if (mk !== month) return false;
-      }
-
-      // value filter
-      const v = r.no2;
-      if (minVal != null && !(v >= minVal)) return false;
-      if (maxVal != null && !(v <= maxVal)) return false;
-
-      return true;
-    });
-
-    renderTable(filtered);
-  }
-
-  async function loadTable() {
-    try {
-      const res = await fetch("/api/no2");
-      const data = await res.json();
-
-      tableData = Array.isArray(data) ? data : (data.data || []);
-      // dropdown months vullen
-      const months = Array.from(
-        new Set(tableData.filter(r => r.start).map(r => monthKeyFromStart(r.start)))
-      ).sort();
-
-      const monthSelect = document.getElementById("monthFilter");
-      monthSelect.innerHTML = `<option value="">All</option>` + months
-        .map(m => `<option value="${m}">${m}</option>`)
-        .join("");
-
-      // first render
-      renderTable(tableData);
-
-      // listeners
-      document.getElementById("applyFilters").addEventListener("click", applyFilters);
-      document.getElementById("resetFilters").addEventListener("click", () => {
-        document.getElementById("monthFilter").value = "";
-        document.getElementById("minNo2").value = "";
-        document.getElementById("maxNo2").value = "";
-        renderTable(tableData);
-      });
-
-    } catch (e) {
-      console.error(e);
-      document.getElementById("tableBody").innerHTML =
-        `<tr><td colspan="5">Error loading data</td></tr>`;
-    }
-  }
-
-  loadTable();
-</script>
-
-<!-- Jouw bestaande Leaflet code blijft hier -->
-<script src="/js/map.js"></script>

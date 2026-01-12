@@ -472,57 +472,71 @@ app.get("/download/locations.json", async (req, res) => {
 
 // API: Data voor de kaart
 app.get("/api/locations", async (req, res) => {
-    try {
-        // 1. Haal data op
-        const [locations, measurements] = await Promise.all([
-            Location.find({}).lean(),
-            Measurement.find({}).lean()
-        ]);
+  try {
+    // 1. Haal data op
+    const [locations, measurements] = await Promise.all([
+      Location.find({}).lean(),
+      Measurement.find({}).lean(),
+    ]);
 
-        // Hulpfunctie om IDs te normaliseren
-        const cleanId = (id) => String(id || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+    // Hulpfunctie om IDs te normaliseren
+    const cleanId = (id) =>
+      String(id || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
 
-        // 2. Maak een index van metingen per locatie
-        const measurementsByLoc = new Map();
+    // 2. Maak een index van metingen per locatie
+    const measurementsByLoc = new Map();
 
-        measurements.forEach(m => {
-            const locId = cleanId(m.locationId);
-            if (!measurementsByLoc.has(locId)) {
-                measurementsByLoc.set(locId, []);
-            }
-            measurementsByLoc.get(locId).push(m);
-        });
+    measurements.forEach((m) => {
+      const locId = cleanId(m.locationId);
+      if (!locId) return;
 
-        // 3. Bouw het resultaat
-        const result = locations.map(loc => {
-            const locId = cleanId(loc.locationId);
-            const myData = measurementsByLoc.get(locId) || [];
+      if (!measurementsByLoc.has(locId)) {
+        measurementsByLoc.set(locId, []);
+      }
+      measurementsByLoc.get(locId).push(m);
+    });
 
-            // Sorteer historie op datum
-            myData.sort((a, b) => new Date(a.start) - new Date(b.start));
+    // 3. Bouw het resultaat
+    const result = locations.map((loc) => {
+      // ✅ Zorg dat locationId altijd wordt meegestuurd
+      const rawLocationId =
+        loc.locationId || loc["Location ID"] || loc.location_id || loc.id || "";
 
-            return {
-                name: loc.name,
-                lat: loc.lat,
-                lon: loc.lon,
-                description: loc.description,
-                history: myData.map(m => ({
-                    // Formatteer datum naar YYYY-MM
-                    dateStr: m.period ? String(m.period) : 
-                             (m.start ? new Date(m.start).toISOString().slice(0, 7) : "Unknown"),
-                    rawDate: m.start,
-                    val: m.no2,
-                    tubeId: m.tubeId,
-                    remarks: m.remarks
-                }))
-            };
-        });
+      const locId = cleanId(rawLocationId);
+      const myData = (locId && measurementsByLoc.get(locId)) || [];
 
-        res.json(result);
-    } catch (err) {
-        console.error("API Fout:", err);
-        res.status(500).json({ error: "Internal Server Error", data: [] });
-    }
+      // Sorteer historie op datum
+      myData.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+      return {
+        locationId: String(rawLocationId || "").trim(), // ✅ toegevoegd
+        name: loc.name,
+        lat: loc.lat,
+        lon: loc.lon,
+        description: loc.description,
+        history: myData.map((m) => ({
+          // Formatteer datum naar YYYY-MM
+          dateStr: m.period
+            ? String(m.period)
+            : m.start
+            ? new Date(m.start).toISOString().slice(0, 7)
+            : "Unknown",
+          rawDate: m.start,
+          val: m.no2,
+          tubeId: m.tubeId,
+          remarks: m.remarks,
+        })),
+      };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error("API Fout:", err);
+    res.status(500).json({ error: "Internal Server Error", data: [] });
+  }
 });
 
 // API: NO2 Data ophalen (Direct uit Database)
