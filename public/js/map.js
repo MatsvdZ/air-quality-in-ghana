@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!mapElement) return;
 
     const map = L.map(mapElement, {
+      zoomControl: false,
     }).setView([6.6796, -1.6063], 12);
 
     L.control.zoom({ position: 'topleft' }).addTo(map);
