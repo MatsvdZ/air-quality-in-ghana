@@ -10,7 +10,35 @@
 <!-- MAP VIEW -->
 <div id="mapView" class="view is-active">
   <div class="map-wrapper">
+    
     <div class="kumasi-map"></div>
+
+    <div id="interactiveLegend" class="interactive-legend">
+      
+      <div class="legend-compact">
+        <span class="legend-val">0</span>
+        <div class="gradient-bar"></div>
+        <span class="legend-val">> 80</span>
+        <div class="legend-tooltip">Info</div>
+      </div>
+
+      <div class="legend-expanded">
+        <div class="legend-header">
+            <p>NO₂ (µg/m³)</p>
+            <span class="close-btn">&times;</span>
+        </div>
+        
+        <div class="legend-row"><span class="dot" style="background:#59B61F"></span> 0 – 10</div>
+        <div class="legend-row"><span class="dot" style="background:#A3BF29"></span> 10 – 20</div>
+        <div class="legend-row"><span class="dot" style="background:#EEC732"></span> 20 – 30</div>
+        <div class="legend-row"><span class="dot" style="background:#ECAA33"></span> 30 – 40</div>
+        <div class="legend-row"><span class="dot" style="background:#EA8C34"></span> 40 – 50</div>
+        <div class="legend-row"><span class="dot" style="background:#DA5634"></span> 50 – 60</div>
+        <div class="legend-row"><span class="dot" style="background:#C92033"></span> 60 – 70</div>
+        <div class="legend-row"><span class="dot" style="background:#8F3F97"></span> 70 – 80</div>
+        <div class="legend-row"><span class="dot" style="background:#7E0023"></span> > 80</div>
+      </div>
+    </div>
 
     <div class="slider-container">
       <p class="date-label">Loading...</p>
@@ -22,12 +50,12 @@
         step="1"
         value="0"
       />
-
       <div class="slider-labels">
         <span>Oldest</span>
         <span>Newest</span>
       </div>
     </div>
+
   </div>
 </div>
 

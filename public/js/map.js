@@ -1,25 +1,41 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  const mapElement = document.querySelector(".kumasi-map");
-  if (!mapElement) return;
+    
+    const mapElement = document.querySelector(".kumasi-map");
+    if (!mapElement) return;
 
-  // 1. Kaart initialiseren
-  const map = L.map(mapElement, { scrollWheelZoom: false }).setView(
-    [6.6796, -1.6063],
-    12
-  );
+    const map = L.map(mapElement, {
+    }).setView([6.6796, -1.6063], 12);
 
-  window.__leafletMap = map;
+    L.control.zoom({ position: 'topleft' }).addTo(map);
 
-  // De kaartstijl
-  L.tileLayer(
-    "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-    {
-      subdomains: "abcd",
-      maxZoom: 16,
+    L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        {
+            subdomains: "abcd",
+            maxZoom: 16,        }
+    ).addTo(map);
+
+    window.__leafletMap = map;
+
+    const legendContainer = document.getElementById("interactiveLegend");
+    
+    if (legendContainer) {
+        legendContainer.addEventListener("click", (e) => {
+            e.stopPropagation(); 
+            legendContainer.classList.toggle("is-open");
+        });
+
+        document.addEventListener("click", () => {
+            legendContainer.classList.remove("is-open");
+        });
+
+        if (typeof L !== 'undefined') {
+            L.DomEvent.disableClickPropagation(legendContainer);
+            L.DomEvent.disableScrollPropagation(legendContainer);
+        }
     }
-  ).addTo(map);
-
-  try {
+    
+    try {
     const response = await fetch("/api/locations");
     const allLocations = await response.json();
 
