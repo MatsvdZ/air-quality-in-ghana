@@ -352,7 +352,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Kleurenschaal (Gebaseerd op WHO 2021 & EU Normen)
 function getColor(value) {
-  if (value > 40) return "#e74c3c"; // EU annual limit
-  if (value > 10) return "#f39c12"; // above WHO target
-  return "#27ae60"; // within WHO target
+  if (value > 80) return "#7E0023"; // EU annual limit
+  if (value > 70) return "#8F3F97"; // EU annual limit
+  if (value > 60) return "#C92033"; // EU annual limit
+  if (value > 50) return "#DA5634"; // EU annual limit
+  if (value > 40) return "#EA8C34"; // EU annual limit
+  if (value > 30) return "#ECAA33"; // above WHO target
+  if (value > 20) return "#EEC732"; // above WHO target
+  if (value > 10) return "#A3BF29"; // above WHO target
+  return "#59B61F"; // within WHO target
 }
