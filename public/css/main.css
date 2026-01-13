@@ -245,24 +245,23 @@ main {
 }
 
 
-/* --- Bodem navigatie --- */
+/* --- Bottom navigation --- */
 /* --- Bottom nav (pill, expandable active tab) --- */
 /* --- Bottom nav (pill, expandable active tab + smooth animation) --- */
 .bottom-nav {
   position: fixed;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  height: 64px;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  height: 68px;
 
   display: flex;
   gap: 8px;
 
   padding: 8px;
-  border-radius: 999px;
+  border-radius: var(--components-navigation-bar-corner);
 
-  background: #0b0b0b;
-  border: 1px solid rgba(255, 255, 255, .08);
+  background: var(--nav-bg);
   box-shadow: 0 2px 16px 0 rgba(15, 23, 42, 0.20);
 
   z-index: 999;
@@ -275,13 +274,13 @@ main {
 .bottom-nav__indicator {
   position: absolute;
   top: 8px;
-  left: 8px;
-  height: calc(64px - 16px);
+  left: 0;
+  height: calc(68px - 16px);
   width: 80px;
   /* wordt door JS overschreven */
-  border-radius: 999px;
+  border-radius: var(--components-navigation-bar-corner);
 
-  background: rgba(255, 255, 255, .14);
+  background: var(--muted);
 
   transform: translateX(0);
   transition: transform .26s cubic-bezier(.2, .9, .2, 1), width .26s cubic-bezier(.2, .9, .2, 1);
@@ -301,13 +300,12 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 
-  padding: 0 10px;
-  border-radius: 999px;
+  border-radius: var(--components-navigation-bar-corner);
 
   text-decoration: none;
-  color: rgba(255, 255, 255, .78);
+  color: rgba(255, 255, 255, 0.4);
 
   transition: flex .26s cubic-bezier(.2, .9, .2, 1), color .18s ease;
 }
