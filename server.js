@@ -35,8 +35,6 @@ app.use(expressLayouts);
 app.set("layout", "layout");
 app.use(express.static("public"));
 
-
-
 // body parsing voor forms
 app.use(express.urlencoded({ extended: true }));
 
@@ -62,33 +60,46 @@ function requireAdmin(req, res, next) {
   return res.redirect("/admin/login");
 }
 
-
-
-
 // ---------------- ROUTES ----------------
 
-
-
-
 app.use((req, res, next) => {
-  res.locals.activePage = ""; // default zodat EJS nooit crasht
+  if (req.path === "/") res.locals.activePage = "home";
+  else if (req.path.startsWith("/map")) res.locals.activePage = "map";
+  else if (req.path.startsWith("/download")) res.locals.activePage = "download";
+  else if (req.path.startsWith("/admin")) res.locals.activePage = "admin";
+  else res.locals.activePage = "";
   next();
 });
 
-
 // Home Pagina
 app.get("/", (req, res) => {
-  res.locals.activePage = "home";
   res.render("index", { title: "Home" });
 });
 
-// Admin Pagina
-app.get("/admin/login", (req, res) => {
-  res.locals.activePage = "";
-  res.render("admin/login", { title: "Admin login", error: null });
+app.use((req, res, next) => {
+  if (req.path === "/") res.locals.activePage = "home";
+  else if (req.path.startsWith("/map")) res.locals.activePage = "map";
+  else if (req.path.startsWith("/download")) res.locals.activePage = "download";
+  else if (req.path.startsWith("/admin")) res.locals.activePage = "admin";
+  else res.locals.activePage = "";
+  next();
 });
 
-//login route
+// Home Pagina
+app.get("/", (req, res) => {
+  res.render("index", { title: "Home" });
+});
+
+// Admin login pagina
+app.get("/admin/login", (req, res) => {
+  res.render("admin/login", {
+    title: "Admin login",
+    error: null,
+    activePage: "admin",
+  });
+});
+
+// login route
 app.post("/admin/login", (req, res) => {
   const { username, password } = req.body;
 
@@ -103,14 +114,14 @@ app.post("/admin/login", (req, res) => {
   return res.status(401).render("admin/login", {
     title: "Admin login",
     error: "Incorrect username or password",
+    activePage: "admin",
   });
 });
 
-//logout route
+// logout route
 app.post("/admin/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
-
 
 app.get("/admin", requireAdmin, async (req, res) => {
   const locationCount = await Location.countDocuments();
@@ -120,14 +131,17 @@ app.get("/admin", requireAdmin, async (req, res) => {
     title: "Admin",
     locationCount,
     measurementCount,
+    activePage: "admin",
   });
 });
 
-
 app.get("/admin/locations/new", requireAdmin, (req, res) => {
-  res.render("admin/new-location", { title: "Add location", error: null });
+  res.render("admin/new-location", {
+    title: "Add location",
+    error: null,
+    activePage: "admin",
+  });
 });
-
 
 app.post("/admin/locations", requireAdmin, async (req, res) => {
   try {
@@ -140,6 +154,7 @@ app.post("/admin/locations", requireAdmin, async (req, res) => {
       return res.status(400).render("admin/new-location", {
         title: "Add location",
         error: "Fill in Location ID, name, latitude and longitude.",
+        activePage: "admin",
       });
     }
 
@@ -156,6 +171,7 @@ app.post("/admin/locations", requireAdmin, async (req, res) => {
     res.status(500).render("admin/new-location", {
       title: "Add location",
       error: err.message,
+      activePage: "admin",
     });
   }
 });
@@ -167,6 +183,7 @@ app.get("/admin/measurements/new", requireAdmin, async (req, res) => {
     title: "Add measurement",
     error: null,
     locations,
+    activePage: "admin",
   });
 });
 
@@ -174,7 +191,6 @@ app.post("/admin/measurements", requireAdmin, async (req, res) => {
   try {
     const { locationId, tubeId, period, no2 } = req.body;
 
-    // period check YYYY-MM
     const periodOk = /^\d{4}-\d{2}$/.test(period || "");
     const no2Num = Number(no2);
 
@@ -184,15 +200,15 @@ app.post("/admin/measurements", requireAdmin, async (req, res) => {
         title: "Add measurement",
         error: "Choose a location, use period YYYY-MM, and enter a NO₂ number.",
         locations,
+        activePage: "admin",
       });
     }
 
     await Measurement.create({
       locationId: locationId.trim(),
       tubeId: (tubeId || "").trim() || null,
-      period: period.trim(),          // ✅ als string YYYY-MM
+      period: period.trim(),
       no2: no2Num,
-      // start/end optioneel; je kunt ze leeg laten voor deze admin flow
       start: null,
       end: null,
       remarks: null,
@@ -205,6 +221,7 @@ app.post("/admin/measurements", requireAdmin, async (req, res) => {
       title: "Add measurement",
       error: err.message,
       locations,
+      activePage: "admin",
     });
   }
 });
@@ -228,6 +245,7 @@ app.get("/admin/locations", requireAdmin, async (req, res) => {
     title: "Locations",
     locations,
     q,
+    activePage: "admin",
   });
 });
 
@@ -235,7 +253,13 @@ app.get("/admin/locations", requireAdmin, async (req, res) => {
 app.get("/admin/locations/:id/edit", requireAdmin, async (req, res) => {
   const location = await Location.findById(req.params.id).lean();
   if (!location) return res.status(404).send("Location not found");
-  res.render("admin/edit-location", { title: "Edit location", location, error: null });
+
+  res.render("admin/edit-location", {
+    title: "Edit location",
+    location,
+    error: null,
+    activePage: "admin",
+  });
 });
 
 // EDIT POST: locatie opslaan
@@ -252,6 +276,7 @@ app.post("/admin/locations/:id", requireAdmin, async (req, res) => {
         title: "Edit location",
         location,
         error: "Fill in Location ID, name, latitude and longitude.",
+        activePage: "admin",
       });
     }
 
@@ -266,34 +291,35 @@ app.post("/admin/locations/:id", requireAdmin, async (req, res) => {
     res.redirect("/admin/locations");
   } catch (err) {
     const location = await Location.findById(req.params.id).lean();
-    res.status(500).render("admin/edit-location", { title: "Edit location", location, error: err.message });
+    res.status(500).render("admin/edit-location", {
+      title: "Edit location",
+      location,
+      error: err.message,
+      activePage: "admin",
+    });
   }
 });
 
-// DELETE: locatie (en optioneel gekoppelde metingen)
+// DELETE: locatie (en gekoppelde metingen)
 app.post("/admin/locations/:id/delete", requireAdmin, async (req, res) => {
   const loc = await Location.findById(req.params.id).lean();
   if (!loc) return res.redirect("/admin/locations");
 
-  // 1) delete location
   await Location.findByIdAndDelete(req.params.id);
-
-  // 2) (aanrader) delete measurements that reference this locationId
   await Measurement.deleteMany({ locationId: loc.locationId });
 
   res.redirect("/admin/locations");
 });
 
-// LIST: metingen (laatste 300)
+// LIST: metingen
 app.get("/admin/measurements", requireAdmin, async (req, res) => {
-  const q = (req.query.q || "").trim();              // search tube/location
+  const q = (req.query.q || "").trim();
   const locationId = (req.query.locationId || "").trim();
-  const period = (req.query.period || "").trim();    // YYYY-MM
+  const period = (req.query.period || "").trim();
   const page = Math.max(parseInt(req.query.page || "1", 10), 1);
   const perPage = 25;
 
   const filter = {};
-
   if (locationId) filter.locationId = locationId;
   if (period) filter.period = period;
 
@@ -314,12 +340,10 @@ app.get("/admin/measurements", requireAdmin, async (req, res) => {
     .limit(perPage)
     .lean();
 
-  // dropdowns vullen
   const locationIds = await Location.find({}, { locationId: 1, _id: 0 })
     .sort({ locationId: 1 })
     .lean();
 
-  // unieke periods uit measurements (kan ook uit data komen)
   const periods = await Measurement.distinct("period");
 
   res.render("admin/measurements", {
@@ -328,12 +352,13 @@ app.get("/admin/measurements", requireAdmin, async (req, res) => {
     q,
     locationId,
     period,
-    locationIds: locationIds.map(x => x.locationId),
+    locationIds: locationIds.map((x) => x.locationId),
     periods: periods.sort().reverse(),
     page: safePage,
     totalPages,
     total,
     perPage,
+    activePage: "admin",
   });
 });
 
@@ -343,7 +368,13 @@ app.get("/admin/measurements/:id/edit", requireAdmin, async (req, res) => {
   if (!measurement) return res.status(404).send("Measurement not found");
 
   const locations = await Location.find({}).sort({ locationId: 1 }).lean();
-  res.render("admin/edit-measurement", { title: "Edit measurement", measurement, locations, error: null });
+  res.render("admin/edit-measurement", {
+    title: "Edit measurement",
+    measurement,
+    locations,
+    error: null,
+    activePage: "admin",
+  });
 });
 
 // EDIT POST: meting opslaan
@@ -362,6 +393,7 @@ app.post("/admin/measurements/:id", requireAdmin, async (req, res) => {
         measurement,
         locations,
         error: "Choose a location, use period YYYY-MM, and enter a NO₂ number.",
+        activePage: "admin",
       });
     }
 
@@ -381,6 +413,7 @@ app.post("/admin/measurements/:id", requireAdmin, async (req, res) => {
       measurement,
       locations,
       error: err.message,
+      activePage: "admin",
     });
   }
 });
@@ -391,19 +424,11 @@ app.post("/admin/measurements/:id/delete", requireAdmin, async (req, res) => {
   res.redirect("/admin/measurements");
 });
 
-
-
-
-
-
-
 app.get("/map", (req, res) => {
-  res.locals.activePage = "map";
   res.render("map", { title: "Map" });
 });
 
 app.get("/download", (req, res) => {
-  res.locals.activePage = "download";
   res.render("download", { title: "Download" });
 });
 
@@ -522,8 +547,8 @@ app.get("/api/locations", async (req, res) => {
           dateStr: m.period
             ? String(m.period)
             : m.start
-            ? new Date(m.start).toISOString().slice(0, 7)
-            : "Unknown",
+              ? new Date(m.start).toISOString().slice(0, 7)
+              : "Unknown",
           rawDate: m.start,
           val: m.no2,
           tubeId: m.tubeId,
@@ -556,9 +581,7 @@ app.get("/api/no2", async (req, res) => {
 });
 
 // 404 Handler (Als pagina niet bestaat)
-app.use((req, res) =>
-  res.status(404).send("<h1>404 - Page not found</h1>")
-);
+app.use((req, res) => res.status(404).send("<h1>404 - Page not found</h1>"));
 
 // Start de Server
 app.listen(PORT, () => {

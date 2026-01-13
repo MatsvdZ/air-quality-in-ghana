@@ -1,27 +1,109 @@
-<% const page = typeof activePage !== 'undefined' ? activePage : '' %>
-
 <nav class="bottom-nav" aria-label="Bottom navigation">
+  <span class="bottom-nav__indicator" aria-hidden="true"></span>
+
   <a
+    class="bottom-nav__item <%= (activePage === 'home') ? 'is-active' : '' %>"
     href="/"
-    class="bottom-nav__item <%= page === 'home' ? 'is-active' : '' %>"
+    aria-label="Home"
   >
- 
+    <span class="bottom-nav__icon" aria-hidden="true">
+      <!-- home icon -->
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+        <path
+          d="M4 10.5L12 4l8 6.5V20a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 20v-9.5Z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M9.5 21.5V14a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v7.5"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </span>
     <span class="bottom-nav__label">Home</span>
   </a>
 
   <a
-    href="/download"
-    class="bottom-nav__fab <%= page === 'download' ? 'is-active' : '' %>"
-    aria-label="Download"
+    class="bottom-nav__item <%= (activePage === 'map') ? 'is-active' : '' %>"
+    href="/map"
+    aria-label="Map"
   >
-    +
+    <span class="bottom-nav__icon" aria-hidden="true">
+      <!-- map pin icon -->
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+        <path
+          d="M12 22s7-5.2 7-12a7 7 0 1 0-14 0c0 6.8 7 12 7 12Z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+      </svg>
+    </span>
+    <span class="bottom-nav__label">Map</span>
   </a>
 
   <a
-    href="/map"
-    class="bottom-nav__item <%= page === 'map' ? 'is-active' : '' %>"
+    class="bottom-nav__item <%= (activePage === 'download') ? 'is-active' : '' %>"
+    href="/download"
+    aria-label="Download"
   >
+    <span class="bottom-nav__icon" aria-hidden="true">
+      <!-- download icon -->
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+        <path
+          d="M12 3v10"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <path
+          d="M8 11l4 4 4-4"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M4 20h16"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+    </span>
+    <span class="bottom-nav__label">Download</span>
+  </a>
 
-    <span class="bottom-nav__label">Map</span>
+  <a
+    class="bottom-nav__item <%= (activePage === 'admin') ? 'is-active' : '' %>"
+    href="/admin"
+    aria-label="Admin"
+  >
+    <span class="bottom-nav__icon" aria-hidden="true">
+      <!-- shield/lock icon -->
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+        <path
+          d="M12 3l8 4v6c0 5-3.4 8.7-8 9-4.6-.3-8-4-8-9V7l8-4Z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M9.5 12.5a2.5 2.5 0 0 1 5 0V15a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-2.5Z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </span>
+    <span class="bottom-nav__label">Admin</span>
   </a>
 </nav>

@@ -25,7 +25,92 @@
 
     <main class="app-main"><%- body %></main>
 
-    <%- include('partials/footer') %> 
-    <%- include('partials/bottomnav') %>
+    <%- include('partials/footer') %> <%- include('partials/bottomnav') %>
+
+    <script>
+      (function () {
+        const nav = document.querySelector(".bottom-nav");
+        if (!nav) return;
+
+        const indicator = nav.querySelector(".bottom-nav__indicator");
+        const items = Array.from(nav.querySelectorAll(".bottom-nav__item"));
+        if (!indicator || !items.length) return;
+
+        function bestMatchItem() {
+          const p = window.location.pathname;
+
+          // Exact match eerst (/, /map, /download, /admin)
+          let item =
+            items.find((a) => a.getAttribute("href") === p) ||
+            // Daarna "startsWith" match (bv /admin/login -> /admin)
+            items.find((a) => p.startsWith(a.getAttribute("href") + "/"));
+
+          // Speciaal: root "/" mag niet alles matchen
+          if (!item) {
+            if (p.startsWith("/admin"))
+              item = items.find((a) => a.getAttribute("href") === "/admin");
+            else if (p.startsWith("/map"))
+              item = items.find((a) => a.getAttribute("href") === "/map");
+            else if (p.startsWith("/download"))
+              item = items.find((a) => a.getAttribute("href") === "/download");
+            else
+              item =
+                items.find((a) => a.getAttribute("href") === "/") || items[0];
+          }
+
+          return item || items[0];
+        }
+
+        function setActive(el) {
+          items.forEach((x) => x.classList.remove("is-active"));
+          el.classList.add("is-active");
+        }
+
+        function moveIndicatorTo(el) {
+          const navRect = nav.getBoundingClientRect();
+          const r = el.getBoundingClientRect();
+          const left = r.left - navRect.left;
+
+          indicator.style.width = r.width + "px";
+          indicator.style.transform = `translateX(${left}px)`;
+        }
+
+        // ✅ On load: bepaal active tab op basis van URL
+        const initial = bestMatchItem();
+        setActive(initial);
+        moveIndicatorTo(initial);
+
+        // ✅ Op resize opnieuw uitlijnen
+        window.addEventListener("resize", () => {
+          const current = bestMatchItem();
+          setActive(current);
+          moveIndicatorTo(current);
+        });
+
+        // ✅ Op click: eerst animatie, dan navigeren
+        items.forEach((a) => {
+          a.addEventListener("click", (e) => {
+            const href = a.getAttribute("href");
+            if (!href) return;
+
+            // als je al op dezelfde "sectie" zit, geen delay nodig
+            const p = window.location.pathname;
+            const sameSection =
+              (href === "/" && p === "/") ||
+              (href !== "/" && (p === href || p.startsWith(href + "/")));
+
+            if (sameSection) return;
+
+            e.preventDefault();
+            setActive(a);
+            moveIndicatorTo(a);
+
+            setTimeout(() => {
+              window.location.href = href;
+            }, 180);
+          });
+        });
+      })();
+    </script>
   </body>
 </html>
