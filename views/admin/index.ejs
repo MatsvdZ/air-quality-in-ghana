@@ -1,37 +1,107 @@
-<section class="container">
-  <header class="page-head">
-    <h1 class="h1"><%= title %></h1>
-    <p class="muted">Add locations and measurements for Kumasi.</p>
-  </header>
-
-  <div class="card stack">
-    <div class="kpi">
-      <div class="kpi__box">
-        <p class="kpi__label">Locations</p>
-        <p class="kpi__value"><%= locationCount %></p>
-      </div>
-      <div class="kpi__box">
-        <p class="kpi__label">Measurements</p>
-        <p class="kpi__value"><%= measurementCount %></p>
-      </div>
-    </div>
-
-    <div class="btnrow">
-      <a class="btn btn--primary" href="/admin/locations/new">Add location</a>
-      <a class="btn btn--ghost" href="/admin/measurements/new"
-        >Add measurement</a
-      >
-    </div>
-
-    <div class="btnrow" style="margin-top: 10px">
-      <a class="btn btn--ghost" href="/admin/locations">Manage locations</a>
-      <a class="btn btn--ghost" href="/admin/measurements"
-        >Manage measurements</a
-      >
-    </div>
-
-    <form method="POST" action="/admin/logout">
-      <button class="btn btn--danger btn--full" type="submit">Logout</button>
-    </form>
+<section class="page">
+  <div class="page__header">
+    <h1 class="page__title"><%= title %></h1>
+    <p class="page__subtitle">Add locations and measurements.</p>
   </div>
+
+  <div class="grid">
+    <!-- Measurements -->
+    <article class="card">
+      <div class="card__top">
+        <h2 class="card__title">Measurements</h2>
+        <p class="card__meta large__number">
+          <strong><%= measurementCount %></strong>
+        </p>
+      </div>
+
+      <div class="btnrow" style="align-items: center">
+        <a class="btn btn--primary" href="/admin/measurements/new">
+          Add measurement
+        </a>
+
+        <a
+          class="btn btn--ghost"
+          href="/admin/measurements"
+          aria-label="Manage measurements"
+          title="Manage measurements"
+          style="flex: 0 0 auto; padding: 0 12px"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M19.4 15a1.8 1.8 0 0 0 .36 2l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.8 1.8 0 0 0-2-.36 1.8 1.8 0 0 0-1 1.66V21a2 2 0 1 1-4 0v-.08a1.8 1.8 0 0 0-1-1.66 1.8 1.8 0 0 0-2 .36l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.8 1.8 0 0 0 .36-2 1.8 1.8 0 0 0-1.66-1H3a2 2 0 1 1 0-4h.08a1.8 1.8 0 0 0 1.66-1 1.8 1.8 0 0 0-.36-2l-.06-.06A2 2 0 1 1 7.15 3.9l.06.06a1.8 1.8 0 0 0 2 .36h.01A1.8 1.8 0 0 0 10.3 2.7V2a2 2 0 1 1 4 0v.08a1.8 1.8 0 0 0 1 1.66 1.8 1.8 0 0 0 2-.36l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.8 1.8 0 0 0-.36 2v.01a1.8 1.8 0 0 0 1.66 1H22a2 2 0 1 1 0 4h-.08a1.8 1.8 0 0 0-1.66 1Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+      </div>
+    </article>
+
+    <!-- Locations -->
+    <article class="card">
+      <div class="card__top">
+        <h2 class="card__title">Locations</h2>
+        <p class="card__meta large__number">
+          <strong><%= locationCount %></strong>
+        </p>
+      </div>
+
+      <div class="btnrow" style="align-items: center">
+        <a class="btn btn--primary" href="/admin/locations/new">
+          Add location
+        </a>
+
+        <a
+          class="btn btn--ghost"
+          href="/admin/locations"
+          aria-label="Manage locations"
+          title="Manage locations"
+          style="flex: 0 0 auto; padding: 0 12px"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M19.4 15a1.8 1.8 0 0 0 .36 2l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.8 1.8 0 0 0-2-.36 1.8 1.8 0 0 0-1 1.66V21a2 2 0 1 1-4 0v-.08a1.8 1.8 0 0 0-1-1.66 1.8 1.8 0 0 0-2 .36l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.8 1.8 0 0 0 .36-2 1.8 1.8 0 0 0-1.66-1H3a2 2 0 1 1 0-4h.08a1.8 1.8 0 0 0 1.66-1 1.8 1.8 0 0 0-.36-2l-.06-.06A2 2 0 1 1 7.15 3.9l.06.06a1.8 1.8 0 0 0 2 .36h.01A1.8 1.8 0 0 0 10.3 2.7V2a2 2 0 1 1 4 0v.08a1.8 1.8 0 0 0 1 1.66 1.8 1.8 0 0 0 2-.36l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.8 1.8 0 0 0-.36 2v.01a1.8 1.8 0 0 0 1.66 1H22a2 2 0 1 1 0 4h-.08a1.8 1.8 0 0 0-1.66 1Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+      </div>
+    </article>
+  </div>
+
+  <div class="hint">
+    <p class="hint__text">
+      Tip: Use the gear icon to manage existing entries (edit or delete). Use
+      the button to add new data.
+    </p>
+  </div>
+
+  <form method="POST" action="/admin/logout" style="margin-top: 12px">
+    <button class="btn btn--danger btn--full" type="submit">Logout</button>
+  </form>
 </section>

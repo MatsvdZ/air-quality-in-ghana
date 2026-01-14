@@ -327,6 +327,11 @@ main {
   line-height: 1.5;
 }
 
+.large__number {
+  font-size: 32px;
+  font-weight: 400;
+}
+
 /* Buttons */
 .btnrow {
   display: flex;
@@ -740,6 +745,20 @@ textarea:focus {
   color: var(--text);
 }
 
+.admin-total {
+  margin: 4px 0 0;
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+/* icon-only button */
+.btn--icon {
+  padding: 0 14px;
+  width: auto;
+}
+
 @media (min-width: 780px) {
   .container {
     padding: 24px;
@@ -800,3 +819,5 @@ textarea:focus {
   margin-left: 8px;
   font-size: 14px;
 }
+
+
