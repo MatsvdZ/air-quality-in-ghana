@@ -2,44 +2,126 @@
   <div class="page__header">
     <h1 class="page__title"><%= title %></h1>
     <p class="page__subtitle">
-      Download the latest dataset in the format you need.
+      Download data in your preferred file format.
     </p>
   </div>
 
   <div class="grid">
+    <!-- Measurements -->
     <article class="card">
-      <div class="card__top">
-        <h2 class="card__title">NO₂ measurements</h2>
-        <p class="card__meta">Time series, per tube/location and time window.</p>
-      </div>
+      <h2 class="card__title">NO₂ measurements</h2>
+      <p class="card__meta">
+        Time series per tube, location and measurement period.
+      </p>
 
-      <div class="btnrow">
-        <a class="btn" href="/download/no2.xlsx" download>
-          Download Excel (.xlsx)
-        </a>
-        <a class="btn btn--ghost" href="/download/no2.json" download>
-          Download JSON (.json)
-        </a>
+      <div class="download-dropdown">
+        <button
+          class="btn btn--primary btn--full download-dropdown__toggle"
+          type="button"
+        >
+          Download dataset
+          <span class="download-dropdown__arrow">▾</span>
+        </button>
+
+        <div class="download-dropdown__menu">
+          <a href="/download/no2.xlsx" class="download-dropdown__item">
+            Excel (.xlsx)
+          </a>
+          <a href="/download/no2.csv" class="download-dropdown__item">
+            CSV (.csv)
+          </a>
+          <a href="/download/no2.json" class="download-dropdown__item">
+            JSON (.json)
+          </a>
+        </div>
       </div>
     </article>
 
+    <!-- Locations -->
     <article class="card">
-      <div class="card__top">
-        <h2 class="card__title">Locations</h2>
-        <p class="card__meta">Location metadata: name, latitude, longitude, description.</p>
-      </div>
+      <h2 class="card__title">Locations</h2>
+      <p class="card__meta">
+        Location metadata including coordinates and descriptions.
+      </p>
 
-      <div class="btnrow">
-        <a class="btn" href="/download/locations.json" download>
-          Download JSON (.json)
-        </a>
+      <div class="download-dropdown">
+        <button
+          class="btn btn--primary btn--full download-dropdown__toggle"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          Download dataset
+          <span class="download-dropdown__arrow">▾</span>
+        </button>
+
+        <div class="download-dropdown__menu">
+          <a href="/download/locations.xlsx" class="download-dropdown__item">
+            Excel (.xlsx)
+          </a>
+          <a href="/download/locations.csv" class="download-dropdown__item">
+            CSV (.csv)
+          </a>
+          <a href="/download/locations.json" class="download-dropdown__item">
+            JSON (.json)
+          </a>
+        </div>
       </div>
     </article>
-  </div>
 
-  <div class="hint">
-    <p class="hint__text">
-      Tip: Excel is easiest for analysis in spreadsheet tools. JSON is best for developers and APIs.
-    </p>
+    <div class="hint">
+      <p class="hint__text">
+        Tip: Excel is ideal for spreadsheet analysis, CSV works well with research
+        tools, and JSON is suited for developers and APIs.
+      </p>
+    </div>
+
+    <script>
+      (function () {
+        const dropdowns = Array.from(
+          document.querySelectorAll(".download-dropdown")
+        );
+
+        function closeAll(except = null) {
+          dropdowns.forEach((d) => {
+            if (except && d === except) return;
+            d.classList.remove("is-open");
+            const t = d.querySelector(".download-dropdown__toggle");
+            if (t) t.setAttribute("aria-expanded", "false");
+          });
+        }
+
+        dropdowns.forEach((dropdown) => {
+          const toggle = dropdown.querySelector(".download-dropdown__toggle");
+          const menu = dropdown.querySelector(".download-dropdown__menu");
+
+          if (!toggle || !menu) return;
+
+          toggle.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const isOpen = dropdown.classList.contains("is-open");
+            closeAll(dropdown);
+
+            if (!isOpen) {
+              dropdown.classList.add("is-open");
+              toggle.setAttribute("aria-expanded", "true");
+            } else {
+              dropdown.classList.remove("is-open");
+              toggle.setAttribute("aria-expanded", "false");
+            }
+          });
+        });
+
+        // Close when clicking outside (ONE global listener)
+        document.addEventListener("click", () => closeAll());
+
+        // Close on Escape
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") closeAll();
+        });
+      })();
+    </script>
   </div>
 </section>

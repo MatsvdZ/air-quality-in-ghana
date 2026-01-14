@@ -12,7 +12,7 @@
   --shadow: 0 2px 16px 0 rgba(15, 23, 42, 0.2);
   --pad: 18px;
 
-  --font: "Gilroy", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  --font: "Poppins", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
 
   --spacing-xxs: 0.25rem;
   --spacing-xs: 0.5rem;
@@ -48,6 +48,7 @@ main {
   padding: var(--spacing-s);
   max-width: 75rem;
   margin: 0 auto;
+  height: 100vh;
 }
 
 /* --- DE KAART --- */
@@ -288,7 +289,7 @@ main {
 
 .page__subtitle {
   margin: 0;
-  color: var(--muted);
+  color: var(--text);
   line-height: 1.5;
 }
 
@@ -322,7 +323,7 @@ main {
 
 .card__meta {
   margin: 0;
-  color: var(--muted);
+  color: var(--text);
   line-height: 1.5;
 }
 
@@ -375,8 +376,9 @@ main {
 
 .hint__text {
   margin: 0;
-  color: var(--muted);
+  color: var(--text);
   line-height: 1.5;
+  font-size: 12px;
 }
 
 
@@ -678,11 +680,6 @@ textarea:focus {
   gap: 8px;
 }
 
-.btn--primary {
-  background: var(--text);
-  color: white;
-}
-
 .btn--ghost {
   background: white;
   border-color: #e2e8f0;
@@ -759,4 +756,47 @@ textarea:focus {
   .kpi {
     grid-template-columns: 1fr 1fr 1fr;
   }
+}
+
+/* ---------- Download Page dropdown ---------- */
+
+.download-dropdown {
+  position: relative;
+  margin-top: 12px;
+}
+
+.download-dropdown__menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.download-dropdown.is-open .download-dropdown__menu {
+  display: block;
+}
+
+.download-dropdown__item {
+  display: block;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.download-dropdown__item:hover {
+  background: var(--secondary-btn-bg);
+}
+
+.download-dropdown__arrow {
+  margin-left: 8px;
+  font-size: 14px;
 }

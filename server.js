@@ -448,6 +448,54 @@ app.get("/download/no2.json", async (req, res) => {
   }
 });
 
+function csvEscape(value) {
+  if (value === null || value === undefined) return "";
+  const s = String(value);
+  // escape quotes, wrap if needed
+  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+app.get("/download/no2.csv", async (req, res) => {
+  try {
+    const measurements = await Measurement.find({})
+      .sort({ period: -1, locationId: 1 })
+      .lean();
+
+    const headers = [
+      "Tube ID",
+      "Location ID",
+      "Period",
+      "Start",
+      "End",
+      "NO2",
+      "Remarks",
+    ];
+    const lines = [headers.join(",")];
+
+    for (const m of measurements) {
+      lines.push(
+        [
+          csvEscape(m.tubeId),
+          csvEscape(m.locationId),
+          csvEscape(m.period),
+          csvEscape(m.start),
+          csvEscape(m.end),
+          csvEscape(m.no2),
+          csvEscape(m.remarks),
+        ].join(",")
+      );
+    }
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="no2-data.csv"');
+    res.send(lines.join("\n"));
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("CSV download failed");
+  }
+});
+
 app.get("/download/no2.xlsx", async (req, res) => {
   const measurements = await Measurement.find({}).sort({ start: -1 }).lean();
 
@@ -493,6 +541,72 @@ app.get("/download/locations.json", async (req, res) => {
   res.setHeader("Content-Disposition", 'attachment; filename="locations.json"');
 
   res.send(JSON.stringify(data, null, 2));
+});
+
+app.get("/download/locations.csv", async (req, res) => {
+  const locations = await Location.find({}).sort({ locationId: 1 }).lean();
+
+  const headers = [
+    "Location ID",
+    "Name",
+    "Latitude",
+    "Longitude",
+    "Description",
+  ];
+
+  const rows = locations.map((loc) => [
+    loc.locationId,
+    loc.name,
+    loc.lat,
+    loc.lon,
+    loc.description || "",
+  ]);
+
+  const csv =
+    headers.join(",") +
+    "\n" +
+    rows
+      .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", 'attachment; filename="locations.csv"');
+
+  res.send(csv);
+});
+
+app.get("/download/locations.xlsx", async (req, res) => {
+  const locations = await Location.find({}).sort({ locationId: 1 }).lean();
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Locations");
+
+  ws.columns = [
+    { header: "Location ID", key: "locationId" },
+    { header: "Name", key: "name" },
+    { header: "Latitude", key: "lat" },
+    { header: "Longitude", key: "lon" },
+    { header: "Description", key: "description" },
+  ];
+
+  locations.forEach((loc) => {
+    ws.addRow({
+      locationId: loc.locationId,
+      name: loc.name,
+      lat: loc.lat,
+      lon: loc.lon,
+      description: loc.description || "",
+    });
+  });
+
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+  res.setHeader("Content-Disposition", 'attachment; filename="locations.xlsx"');
+
+  await wb.xlsx.write(res);
+  res.end();
 });
 
 // API: Data voor de kaart
