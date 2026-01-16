@@ -1,11 +1,143 @@
-<%- include('partials/header') %>
+<section class="page">
+  <div class="page__header">
+    <h1 class="page__title"><%= title %></h1>
+    <p class="page__subtitle">Check the nitrogen dioxide (NO₂) level.</p>
+  </div>
 
-<p>
-  De server werkt ✅<br />
-  Data komt uit MongoDB.
-</p>
+  <div class="grid">
+    <!-- Ranking -->
+    <article class="card">
+      <h2 class="card__title">Ranking</h2>
+      <p class="card__meta">
+        Time series per tube, location and measurement period.
+      </p>
 
-<p>
-  <a href="/api/no2">Bekijk NO₂ data (JSON)</a>
-</p>
+      <div class="download-dropdown"></div>
+    </article>
 
+    <!-- Mini map (zonder card eromheen) -->
+    <a href="/map" class="home-map-preview" aria-label="Open map">
+      <div class="home-map-preview__inner"></div>
+    </a>
+
+    <!-- What is NO2 -->
+    <article class="card">
+      <h2 class="card__title">What is nitrogen dioxide (NO₂)?</h2>
+      <p class="card__meta">
+        Nitrogen dioxide (NO₂) is a major contributor to the
+        formation of smog and a precursor to many harmful secondary pollutants,
+        including ozone and particulate matter (PM). It's highly
+        reactive with other chemicals and is a strong oxidizing agent.
+      </p>
+    </article>
+
+    <div class="hint">
+      <p class="hint__text">
+        Source:
+        <a href="https://www.iqair.com/newsroom/nitrogen-dioxide">
+          https://www.iqair.com/newsroom/nitrogen-dioxide
+        </a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const el = document.querySelector(".home-map-preview__inner");
+    if (!el) return;
+
+    // Mini Leaflet preview
+    const miniMap = L.map(el, {
+      zoomControl: false,
+      attributionControl: false,
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      tap: false,
+      touchZoom: false,
+    }).setView([6.6796, -1.6063], 12);
+
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      { subdomains: "abcd", maxZoom: 16 }
+    ).addTo(miniMap);
+
+    try {
+      const res = await fetch("/api/locations");
+      const allLocations = await res.json();
+
+      // 1) verzamel alle periods en pak de nieuwste
+      const periodSet = new Set();
+      allLocations.forEach((loc) => {
+        (loc.history || []).forEach((h) => {
+          if (h.dateStr) periodSet.add(h.dateStr);
+        });
+      });
+
+      const periods = Array.from(periodSet);
+      if (!periods.length) return;
+
+      // dateStr is bij jou "MMM YYYY" (bijv. "Oct 2025")
+      // We sorteren op echte datum
+      const toDate = (p) => {
+        const d = new Date(p); // werkt voor "Oct 2025"
+        return isNaN(d) ? new Date(0) : d;
+      };
+
+      periods.sort((a, b) => toDate(a) - toDate(b));
+      const latestPeriod = periods[periods.length - 1];
+
+      // 2) teken cirkels voor de nieuwste periode
+      allLocations.forEach((loc) => {
+        const lat = Number(loc.lat);
+        const lon = Number(loc.lon);
+        if (!lat || !lon) return;
+
+        const m = (loc.history || []).find((h) => h.dateStr === latestPeriod);
+        const v = m?.val;
+
+        // geen data? teken klein grijs puntje of skip
+        if (v === undefined || v === null || v === "" || Number.isNaN(Number(v))) {
+          // Wil je no-data helemaal niet tonen? return;
+          const dot = L.circleMarker([lat, lon], {
+            color: "rgba(255,255,255,.9)",
+            weight: 1,
+            fillColor: "#bdc3c7",
+            fillOpacity: 0.55,
+            radius: 4,
+          }).addTo(miniMap);
+          return;
+        }
+
+        const value = Number(v);
+        const color = getColor(value);
+
+        L.circleMarker([lat, lon], {
+          color: "rgba(255,255,255,.95)",
+          weight: 1,
+          fillColor: color,
+          fillOpacity: 0.85,
+          radius: 6,
+        }).addTo(miniMap);
+      });
+    } catch (e) {
+      console.error("Mini map preview failed:", e);
+    }
+  });
+
+  // Zelfde kleuren als je map.js
+  function getColor(value) {
+    if (value > 80) return "#7E0023";
+    if (value > 70) return "#8F3F97";
+    if (value > 60) return "#C92033";
+    if (value > 50) return "#DA5634";
+    if (value > 40) return "#EA8C34";
+    if (value > 30) return "#ECAA33";
+    if (value > 20) return "#EEC732";
+    if (value > 10) return "#A3BF29";
+    return "#59B61F";
+  }
+</script>
