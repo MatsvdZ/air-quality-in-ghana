@@ -47,8 +47,14 @@ async function run() {
   console.log("✅ Connected to MongoDB");
 
   // 2️⃣ Load Excel file
-  const excelPath = path.join(__dirname, "data", "source", "latest.xlsx");
-
+  const excelPath = path.join(
+    __dirname,
+    "..",
+    "..",
+    "data",
+    "source",
+    "latest.xlsx"
+  );
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(excelPath);
 
@@ -86,12 +92,9 @@ async function run() {
       period: obj.period ? new Date(obj.period) : null,
       start: obj.startdatetime ? new Date(obj.startdatetime) : null,
       end: obj.enddatetime ? new Date(obj.enddatetime) : null,
-      no2:
-        obj.no2_concentration != null
-          ? Number(obj.no2_concentration)
-          : null,
+      no2: obj.no2_concentration != null ? Number(obj.no2_concentration) : null,
       remarks: obj.remarks ?? null,
-      raw: obj
+      raw: obj,
     };
 
     // minimale validatie
@@ -135,7 +138,7 @@ async function run() {
       name: obj.location ?? null,
       lat: obj.latitude != null ? Number(obj.latitude) : null,
       lon: obj.longitude != null ? Number(obj.longitude) : null,
-      description: obj.description ?? null
+      description: obj.description ?? null,
     };
 
     if (!loc.locationId) return;
