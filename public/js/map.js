@@ -1,3 +1,163 @@
+let selectedItems = [];
+let allLocations = [];
+let savedPeriod = null;
+let markers = []; 
+
+function renderLocationHtml(mode, loc, data, index = null) {
+    const isCard = mode === 'card';
+    const isOverlay = mode === 'overlay';
+    
+    let headerHtml = '';
+    if (isCard) {
+        headerHtml = `
+            <div class="comp-header-row">
+                <h4 class="comp-title">${loc.name}</h4>
+                <span class="comp-remove-btn" onclick="window.removeItem(${index})">&times;</span>
+            </div>`;
+    } else if (isOverlay) {
+        headerHtml = `
+            <a href="javascript:void(0)" class="leaflet-popup-close-button" onclick="window.closeOverlay()">×</a>
+            <h3 class="popup-title">${loc.name}</h3>
+        `;
+    } else {
+        headerHtml = `<h3 class="popup-title">${loc.name}</h3>`;
+    }
+
+    const descHtml = (!isCard && data.desc) 
+        ? `<div class="popup-desc">${data.desc}</div>` 
+        : '';
+
+    let remarkHtml = '';
+    const remarkText = data.remarks; 
+
+    if (!isCard && remarkText && typeof remarkText === 'string' && remarkText.trim() !== "") {
+        remarkHtml = `
+          <div class="popup-remark">  <strong>Note:</strong> ${remarkText}
+          </div>`;
+    }
+
+    const explHtml = data.explanation
+        ? `<div class="data-explanation">${data.explanation}</div>`
+        : '';
+
+    const footerHtml = (!isCard)
+        ? `<button class="action-btn" onclick="window.toggleComp('${loc.locationId}')">
+             + Add to compare
+           </button>`
+        : '';
+
+    const containerClass = isCard ? 'compare-card' : 'custom-popup';
+    const lat = Number(loc.lat).toFixed(4);
+    const lon = Number(loc.lon).toFixed(4);
+
+    return `
+      <div class="${containerClass}">
+         ${headerHtml}
+         
+        <div class="${isCard ? 'comp-id' : 'popup-id'} tube-id-wrapper">
+          Tube ID: ${loc.locationId}
+        </div>
+         
+        <div class="popup-coords">
+          ${lat}, ${lon}
+        </div>
+
+         ${descHtml}
+         
+         ${remarkHtml}
+
+         <div class="data-period">${data.period}</div>
+
+         <div class="data-box">            
+            <span class="data-label">NO₂ Concentration</span>
+            <div class="data-value-row">
+               <span class="data-value" style="color:${data.color}">${data.valText}</span>
+               <span class="data-unit">µg/m³</span>
+            </div>
+            ${explHtml}
+         </div>
+
+         ${footerHtml}
+      </div>
+    `;
+}
+
+window.closeOverlay = function() {
+    const ov = document.getElementById("detailsOverlay");
+    if(ov) ov.classList.remove("is-visible");
+};
+
+window.toggleComp = function(id) {
+    const exists = selectedItems.find(item => item.id === id && item.period === savedPeriod);
+    if (exists) {
+        alert("This location from this period is already in the comparison.");
+        return;
+    }
+    
+    if (selectedItems.length >= 2) {
+        alert("You can compare a maximum of 2 locations.");
+        return;
+    }
+    
+    selectedItems.push({ id: id, period: savedPeriod });
+    
+    const dock = document.getElementById("comparisonDock");
+    const count = document.getElementById("comparisonCount");
+    if (dock && count) {
+        dock.classList.add("is-visible");
+        count.innerText = `${selectedItems.length} locations selected`;
+    }
+    
+    window.closeOverlay();
+    if (window.__leafletMap) window.__leafletMap.closePopup();
+};
+
+window.showComparison = function() {
+    const grid = document.getElementById("compareGrid");
+    const modal = document.getElementById("compareModal");
+    if (!grid || !modal) return;
+    
+    grid.innerHTML = "";
+    
+    selectedItems.forEach((item, index) => {
+        const loc = allLocations.find(l => l.locationId === item.id);
+        if (!loc) return;
+
+        const m = loc.history.find(h => h.dateStr === item.period);
+        const val = m ? Number(m.val) : 0;
+        const color = (m && val) ? getColor(val) : "#ccc";
+        
+        const valText = (m && val) ? val.toFixed(2) : "No data";
+
+        grid.innerHTML += renderLocationHtml('card', loc, {
+            period: item.period,
+            valText: valText,
+            color: color
+        }, index);
+    });
+    modal.classList.add("is-active");
+};
+
+window.removeItem = function(index) {
+    selectedItems.splice(index, 1);
+    if (selectedItems.length === 0) {
+        window.closeComparison();
+        window.clearComparison();
+    } else {
+        window.showComparison();
+        document.getElementById("comparisonCount").innerText = `${selectedItems.length} locations selected`;
+    }
+};
+
+window.clearComparison = function() {
+    selectedItems = [];
+    document.getElementById("comparisonDock").classList.remove("is-visible");
+};
+
+window.closeComparison = function() {
+    document.getElementById("compareModal").classList.remove("is-active");
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
     
     const mapElement = document.querySelector(".kumasi-map");
@@ -19,17 +179,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.__leafletMap = map;
 
     const legendContainer = document.getElementById("interactiveLegend");
-    
     if (legendContainer) {
         legendContainer.addEventListener("click", (e) => {
             e.stopPropagation(); 
             legendContainer.classList.toggle("is-open");
         });
-
         document.addEventListener("click", () => {
             legendContainer.classList.remove("is-open");
         });
-
         if (typeof L !== 'undefined') {
             L.DomEvent.disableClickPropagation(legendContainer);
             L.DomEvent.disableScrollPropagation(legendContainer);
@@ -37,100 +194,183 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     
     try {
-    const response = await fetch("/api/locations");
-    const allLocations = await response.json();
+        const response = await fetch("/api/locations");
+        allLocations = await response.json();
 
-    let markers = [];
-
-    // 1. Data voorbereiden (maak dateStr consistent als "MMM YYYY")
-    allLocations.forEach((loc) => {
-      if (!Array.isArray(loc.history)) loc.history = [];
-
-      loc.history.forEach((h) => {
-        if (h.dateStr) {
-          const d = new Date(h.dateStr); // verwacht iets als "2025-10" of ISO
-          if (!isNaN(d)) {
-            h.rawDate = d;
+        allLocations.forEach((loc) => {
+          if (!Array.isArray(loc.history)) loc.history = [];
+          loc.history.forEach((h) => {
+            if (h.dateStr) {
+          const d = new Date(h.dateStr);
+              if (!isNaN(d)) {
+                h.rawDate = d;
             h.dateStr = d.toLocaleDateString("en-GB", {
               year: "numeric",
               month: "short",
-            }); // bijv. "Oct 2025"
-          }
-        }
-      });
-    });
+            });
+              }
+            }
+          });
+        });
 
-    // 2. Periodes bepalen
-    const periodMap = new Map();
-    allLocations.forEach((loc) => {
-      loc.history.forEach((h) => {
-        if (!h.dateStr || !h.rawDate) return;
-        const existing = periodMap.get(h.dateStr);
-        if (!existing || h.rawDate < existing) {
-          periodMap.set(h.dateStr, h.rawDate);
-        }
-      });
-    });
+        const periodMap = new Map();
+        allLocations.forEach((loc) => {
+          loc.history.forEach((h) => {
+            if (!h.dateStr || !h.rawDate) return;
+            const existing = periodMap.get(h.dateStr);
+            if (!existing || h.rawDate < existing) {
+              periodMap.set(h.dateStr, h.rawDate);
+            }
+          });
+        });
 
-    const uniquePeriods = [...periodMap.entries()]
-      .sort((a, b) => a[1] - b[1])
-      .map((entry) => entry[0]);
+        const uniquePeriods = [...periodMap.entries()]
+          .sort((a, b) => a[1] - b[1])
+          .map((entry) => entry[0]);
 
-    // ----------------------------
-    // Period dropdown (optie 1)
-    // ----------------------------
-    function populatePeriodDropdown() {
-      const sel = document.getElementById("periodFilter");
-      if (!sel) return;
+    function updateMapDisplay(period) {
+        const label = document.querySelector(".date-label");
+        if (label) label.textContent = `Period: ${period}`;
+
+        savedPeriod = period;
+        renderTableForMonth(period);
+
+        const map = window.__leafletMap; 
+        if (!map) return;
+
+        markers.forEach((marker) => map.removeLayer(marker));
+        markers = [];
+
+        allLocations.forEach((loc) => {
+            const lat = Number(loc.lat);
+            const lon = Number(loc.lon);
+            if (!lat || !lon) return;
+
+            const m = loc.history.find((h) => h.dateStr === period);
+            
+            let valueText = "No data"; 
+            let color = "#ccc"; 
+            let explanation = "";
+            let currentRemark = "";
+
+            if (m) {
+                const val = Number(m.val);
+                if (!isNaN(val) && val > 0) {
+                    valueText = val.toFixed(2);
+                    color = getColor(val);
+                    if (val > 40) explanation = "Above EU annual limit";
+                    else if (val > 10) explanation = "Above WHO annual target";
+                    else explanation = "Within WHO annual target";
+                }
+                if (m.remarks) currentRemark = m.remarks;
+                else if (m.remark) currentRemark = m.remark;
+            }
+
+            let desc = loc.description || "No description available.";
+            if (desc && desc.length > 0) {
+                desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+            }
+            
+            const displayData = {
+                period: period,
+                valText: valueText,
+                color: color,
+                explanation: explanation,
+                desc: desc,
+                remarks: currentRemark
+            };
+
+            const marker = L.circleMarker([lat, lon], {
+              color: "#fff", 
+              weight: 1, 
+              fillColor: color, 
+              fillOpacity: 0.8, 
+              radius: 12,
+            }).addTo(map);
+
+            const popupContent = renderLocationHtml('popup', loc, displayData);
+            
+            marker.bindPopup(popupContent, { 
+                maxWidth: 320, 
+                autoPan: true,
+                autoPanPaddingTopLeft: [50, 50],     
+                autoPanPaddingBottomRight: [50, 300]
+            });
+
+            marker.on('click', (e) => {
+                if (window.innerWidth < 768) {
+                    L.DomEvent.stopPropagation(e);
+                    marker.closePopup();
+                    
+                    const overlay = document.getElementById("detailsOverlay");
+                    if (overlay) {
+                        overlay.innerHTML = renderLocationHtml('overlay', loc, displayData);
+                        overlay.classList.add("is-visible");
+                    }
+
+                    const mapHeight = map.getSize().y;
+                    const targetPoint = map.project([lat, lon], map.getZoom());
+                    
+                    const offset = mapHeight * 0.25;
+                    const newCenterPoint = targetPoint.add([0, offset]); 
+                    const newCenterLatLng = map.unproject(newCenterPoint, map.getZoom());
+
+                    map.flyTo(newCenterLatLng, map.getZoom(), {
+                        animate: true,
+                        duration: 0.2
+                    });
+                }
+            });
+
+            markers.push(marker);
+        });
+        
+        map.on('click', () => { window.closeOverlay(); });
+    }
+
+        function populatePeriodDropdown() {
+          const sel = document.getElementById("periodFilter");
+          if (!sel) return;
 
       sel.innerHTML = uniquePeriods
         .map((p) => `<option value="${p}">${p}</option>`)
         .join("");
-    }
+        }
 
-    function setPeriod(period) {
-      if (!period) return;
+        function setPeriod(period) {
+          if (!period) return;
 
-      // update kaart + tabel
-      updateMapDisplay(period);
+          updateMapDisplay(period);
+          
+          const slider = document.querySelector(".time-slider");
+          if (slider) {
+             const idx = uniquePeriods.indexOf(period);
+             if (idx >= 0) slider.value = String(idx);
+          }
 
-      // sync slider
-      const slider = document.querySelector(".time-slider");
-      if (slider) {
-        const idx = uniquePeriods.indexOf(period);
-        if (idx >= 0) slider.value = String(idx);
-      }
+          const sel = document.getElementById("periodFilter");
+          if (sel) sel.value = period;
+        }
 
-      // sync dropdown
-      const sel = document.getElementById("periodFilter");
-      if (sel) sel.value = period;
-    }
-
-    function wirePeriodDropdown() {
-      const sel = document.getElementById("periodFilter");
-      if (!sel) return;
+        function wirePeriodDropdown() {
+          const sel = document.getElementById("periodFilter");
+          if (!sel) return;
 
       sel.addEventListener("change", () => {
         setPeriod(sel.value);
       });
-    }
+        }
 
-    populatePeriodDropdown();
-    wirePeriodDropdown();
+        populatePeriodDropdown();
+        wirePeriodDropdown();
 
-    // ----------------------------
-    // Table filters wiring
-    // ----------------------------
-    let currentTableRows = [];
-    let currentPeriod = null;
+        let currentTableRows = [];
 
-    function getFilters() {
-      const q = (document.getElementById("qFilter")?.value || "")
-        .trim()
-        .toLowerCase();
-      const minRaw = document.getElementById("minNo2")?.value ?? "";
-      const maxRaw = document.getElementById("maxNo2")?.value ?? "";
-      const hideNoData = !!document.getElementById("hideNoData")?.checked;
+        function getFilters() {
+          const q = (document.getElementById("qFilter")?.value || "").trim().toLowerCase();
+          const minRaw = document.getElementById("minNo2")?.value ?? "";
+          const maxRaw = document.getElementById("maxNo2")?.value ?? "";
+          const hideNoData = !!document.getElementById("hideNoData")?.checked;
 
       return {
         q,
@@ -138,43 +378,40 @@ document.addEventListener("DOMContentLoaded", async () => {
         max: maxRaw === "" ? null : Number(maxRaw),
         hideNoData,
       };
-    }
-
-    function applyTableFilters(rows) {
-      const { q, min, max, hideNoData } = getFilters();
-
-      return rows.filter((r) => {
-        // search
-        if (q) {
-          const hay = `${r.locationId} ${r.name}`.toLowerCase();
-          if (!hay.includes(q)) return false;
         }
+
+        function applyTableFilters(rows) {
+          const { q, min, max, hideNoData } = getFilters();
+          return rows.filter((r) => {
+        // search
+            if (q) {
+              const hay = `${r.locationId} ${r.name}`.toLowerCase();
+              if (!hay.includes(q)) return false;
+            }
 
         // hide nodata
-        if (hideNoData && (r.no2 == null || Number.isNaN(r.no2))) return false;
+            if (hideNoData && (r.no2 == null || Number.isNaN(r.no2))) return false;
 
         // min/max (let op: no2==null mag niet door min/max heen)
-        if (min != null) {
-          if (r.no2 == null || Number.isNaN(r.no2)) return false;
-          if (!(r.no2 >= min)) return false;
+            if (min != null) {
+              if (r.no2 == null || Number.isNaN(r.no2)) return false;
+              if (!(r.no2 >= min)) return false;
+            }
+            if (max != null) {
+              if (r.no2 == null || Number.isNaN(r.no2)) return false;
+              if (!(r.no2 <= max)) return false;
+            }
+            return true;
+          });
         }
-        if (max != null) {
-          if (r.no2 == null || Number.isNaN(r.no2)) return false;
-          if (!(r.no2 <= max)) return false;
-        }
 
-        return true;
-      });
-    }
-
-    function renderTable(rows) {
-      const tbody = document.getElementById("tableBody");
-      if (!tbody) return;
-
-      if (!rows.length) {
+        function renderTable(rows) {
+          const tbody = document.getElementById("tableBody");
+          if (!tbody) return;
+          if (!rows.length) {
         tbody.innerHTML = `<tr><td colspan="4">No results</td></tr>`;
-        return;
-      }
+            return;
+          }
 
       tbody.innerHTML = rows
         .map((r) => {
@@ -191,180 +428,134 @@ document.addEventListener("DOMContentLoaded", async () => {
           `;
         })
         .join("");
-    }
+        }
 
-    function rerenderTable() {
-      const filtered = applyTableFilters(currentTableRows);
-      renderTable(filtered);
-    }
+        function rerenderTable() {
+          const filtered = applyTableFilters(currentTableRows);
+          renderTable(filtered);
+        }
 
-    function renderTableForMonth(selectedPeriod) {
-      const tbody = document.getElementById("tableBody");
-      if (!tbody) return;
+        function renderTableForMonth(selectedPeriod) {
+          const tbody = document.getElementById("tableBody");
+          if (!tbody) return;
 
-      currentPeriod = selectedPeriod;
 
       // Bouw rows uit dezelfde bron als de kaart
-      currentTableRows = allLocations.map((loc) => {
-        const m = loc.history.find((h) => h.dateStr === selectedPeriod);
-        const val = m?.val;
-
-        return {
-          locationId: loc.locationId || "",
-          name: loc.name || "",
-          period: selectedPeriod,
+          currentTableRows = allLocations.map((loc) => {
+            const m = loc.history.find((h) => h.dateStr === selectedPeriod);
+            const val = m?.val;
+            return {
+              locationId: loc.locationId || "",
+              name: loc.name || "",
+              period: selectedPeriod,
           no2:
             val === undefined || val === null || val === ""
               ? null
               : Number(val),
-        };
-      });
+            };
+          });
 
       // Sort: data bovenaan, hoogste eerst
-      currentTableRows.sort((a, b) => {
+          currentTableRows.sort((a, b) => {
         if (a.no2 == null && b.no2 == null)
           return a.locationId.localeCompare(b.locationId);
-        if (a.no2 == null) return 1;
-        if (b.no2 == null) return -1;
-        return b.no2 - a.no2;
-      });
-
-      rerenderTable();
-    }
-
-    function wireTableFilters() {
-      const qEl = document.getElementById("qFilter");
-      const minEl = document.getElementById("minNo2");
-      const maxEl = document.getElementById("maxNo2");
-      const hideEl = document.getElementById("hideNoData");
-      const resetBtn = document.getElementById("resetFilters");
-
-      if (qEl) qEl.addEventListener("input", rerenderTable);
-      if (minEl) minEl.addEventListener("input", rerenderTable);
-      if (maxEl) maxEl.addEventListener("input", rerenderTable);
-      if (hideEl) hideEl.addEventListener("change", rerenderTable);
-
-      if (resetBtn) {
-        resetBtn.addEventListener("click", () => {
-          if (qEl) qEl.value = "";
-          if (minEl) minEl.value = "";
-          if (maxEl) maxEl.value = "";
-          if (hideEl) hideEl.checked = false;
+            if (a.no2 == null) return 1;
+            if (b.no2 == null) return -1;
+            return b.no2 - a.no2;
+          });
           rerenderTable();
-        });
-      }
-    }
-
-    wireTableFilters();
-
-    // 3. De teken-functie
-    function updateMapDisplay(period) {
-      const label = document.querySelector(".date-label");
-      if (label) label.textContent = `Period: ${period}`;
-
-      // ✅ update ook de tabel op exact dezelfde periode
-      renderTableForMonth(period);
-
-      // Verwijder oude markers
-      markers.forEach((marker) => map.removeLayer(marker));
-      markers = [];
-
-      allLocations.forEach((loc) => {
-        const lat = Number(loc.lat);
-        const lon = Number(loc.lon);
-        if (!lat || !lon) return;
-
-        const m = loc.history.find((h) => h.dateStr === period);
-
-        let valueText = "-";
-        let color = "#bdc3c7";
-        let tubeId = "-";
-        let remarkHtml = "";
-        let radius = 10;
-        let explanation = "";
-
-        if (m) {
-          tubeId = m.tubeId || "-";
-          radius = 12;
-          const numVal = Number(m.val);
-
-          if (!isNaN(numVal) && numVal > 0) {
-            valueText = numVal.toFixed(2);
-            color = getColor(numVal);
-
-            if (numVal > 40) explanation = "(Above EU annual limit)";
-            else if (numVal > 10) explanation = "(Above WHO annual target)";
-            else explanation = "(Within WHO annual target)";
-          } else {
-            radius = 10;
-            valueText = "-";
-            color = "#bdc3c7";
-          }
-
-          if (m.remarks) {
-            const r = String(m.remarks).trim();
-            if (r && r !== "null" && r !== "undefined") {
-              remarkHtml = `
-                <div style="margin-top:5px; font-size:11px; color:#d35400;">
-                  <i>${r}</i>
-                </div>`;
-            }
-          }
         }
 
-        let desc = loc.description || "";
-        if (desc) desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+        function wireTableFilters() {
+          const qEl = document.getElementById("qFilter");
+          const minEl = document.getElementById("minNo2");
+          const maxEl = document.getElementById("maxNo2");
+          const hideEl = document.getElementById("hideNoData");
+          const resetBtn = document.getElementById("resetFilters");
+          if (qEl) qEl.addEventListener("input", rerenderTable);
+          if (minEl) minEl.addEventListener("input", rerenderTable);
+          if (maxEl) maxEl.addEventListener("input", rerenderTable);
+          if (hideEl) hideEl.addEventListener("change", rerenderTable);
+          if (resetBtn) {
+            resetBtn.addEventListener("click", () => {
+              if (qEl) qEl.value = "";
+              if (minEl) minEl.value = "";
+              if (maxEl) maxEl.value = "";
+              if (hideEl) hideEl.checked = false;
+              rerenderTable();
+            });
+          }
+        }
+        wireTableFilters();
+        
+        const sliderContainer = document.querySelector(".slider-container");
+        
+        if (uniquePeriods.length && sliderContainer) {
+            const uniqueYears = [...new Set(uniquePeriods.map(p => p.split(" ")[1]))];
+            
+            sliderContainer.innerHTML = `
+                <div class="slider-header">
+                    <span class="slider-static-label">Period:</span>
+                    
+                    <span id="monthDisplay" class="slider-month-val">-</span>
+                    
+                    <select id="yearSelect" class="year-select">
+                        ${uniqueYears.map(y => `<option value="${y}">${y}</option>`).join('')}
+                    </select>
+                </div>
 
-        const marker = L.circleMarker([lat, lon], {
-          color: "#fff",
-          weight: 1,
-          fillColor: color,
-          fillOpacity: 0.8,
-          radius,
-        }).addTo(map);
+                <input type="range" class="time-slider" min="0" max="${uniquePeriods.length - 1}" step="1">
+                
+                <div class="slider-labels">
+                    <span>Oldest</span>
+                    <span>Newest</span>
+                </div>
+            `;
 
-        marker.bindPopup(`
-          <b>${loc.name}</b><br>
-          <small style="color:#555">${desc}</small>
-          ${remarkHtml}
-          <hr style="margin:10px 0; border-top:1px solid #eee">
-          <div><b>Period:</b> ${period}</div>
-          <div><b>Tube ID:</b> ${tubeId}</div>
-          <div style="margin-top: 4px;">
-            <b>NO₂ concentration:</b><br>
-            <span style="font-size:1.2em; font-weight:bold; color:${color}">
-              ${valueText}
-            </span>
-            <small style="color:#666; font-size:0.85em; margin-left: 6px;">
-              ${explanation}
-            </small>
-          </div>
-        `);
+            const slider = sliderContainer.querySelector(".time-slider");
+            const yearSelect = document.getElementById("yearSelect");
+            const monthDisplay = document.getElementById("monthDisplay");
 
-        markers.push(marker);
-      });
+            function syncAll(index) {
+                const period = uniquePeriods[index];
+                
+                if (period) {
+                    const [month, year] = period.split(" ");
+
+                    slider.value = index;
+                    
+                    if (yearSelect.value !== year) {
+                        yearSelect.value = year;
+                    }
+
+                    if (monthDisplay) monthDisplay.textContent = month;
+
+                    if (typeof setPeriod === "function") {
+                        setPeriod(period);
+                    } else {
+                        updateMapDisplay(period);
+                    }
+                }
+            }
+
+            slider.addEventListener("input", (e) => syncAll(e.target.value));
+
+            yearSelect.addEventListener("change", (e) => {
+                const selectedYear = e.target.value;
+                const firstIndex = uniquePeriods.findIndex(p => p.includes(selectedYear));
+                if (firstIndex !== -1) syncAll(firstIndex);
+            });
+
+            slider.value = slider.max;
+            syncAll(slider.value);
+
+        } else {
+             if(sliderContainer) sliderContainer.innerHTML = "<p>No data available</p>";
+        }
+
+    } catch (err) {
+        console.error("Map loading failed:", err);
     }
-
-    // 4. Slider bediening (nu ook dropdown sync)
-    const slider = document.querySelector(".time-slider");
-    if (slider && uniquePeriods.length) {
-      slider.max = uniquePeriods.length - 1;
-      slider.value = slider.max;
-
-      slider.addEventListener("input", (e) => {
-        const period = uniquePeriods[e.target.value];
-        setPeriod(period); // ✅ gebruikt dezelfde sync functie
-      });
-
-      // initial: newest
-      setPeriod(uniquePeriods[slider.value]);
-    } else {
-      const label = document.querySelector(".date-label");
-      if (label) label.textContent = "No data";
-    }
-  } catch (err) {
-    console.error("Map loading failed:", err);
-  }
 });
 
 // Kleurenschaal (Gebaseerd op WHO 2021 & EU Normen)
