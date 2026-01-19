@@ -14,7 +14,6 @@
     <div class="kumasi-map"></div>
 
     <div id="interactiveLegend" class="interactive-legend">
-      
       <div class="legend-compact">
         <span class="legend-val">0</span>
         <div class="gradient-bar"></div>
@@ -27,7 +26,6 @@
             <p>NO₂ (µg/m³)</p>
             <span class="close-btn">&times;</span>
         </div>
-        
         <div class="legend-row"><span class="dot" style="background:#59B61F"></span> 0 – 10</div>
         <div class="legend-row"><span class="dot" style="background:#A3BF29"></span> 10 – 20</div>
         <div class="legend-row"><span class="dot" style="background:#EEC732"></span> 20 – 30</div>
@@ -41,19 +39,7 @@
     </div>
 
     <div class="slider-container">
-      <p class="date-label">Loading...</p>
-      <input
-        type="range"
-        class="time-slider"
-        min="0"
-        max="10"
-        step="1"
-        value="0"
-      />
-      <div class="slider-labels">
-        <span>Oldest</span>
-        <span>Newest</span>
-      </div>
+        <p class="slider-loading">Loading data...</p>
     </div>
 
   </div>
@@ -65,7 +51,6 @@
   <span id="comparisonCount">0 locations selected</span>
   <div class="dock-buttons">
     <button onclick="window.clearComparison()" class="btn btn--ghost">Clear</button>
-    
     <button onclick="window.showComparison()" class="btn">Compare</button>
   </div>
 </div>
@@ -74,8 +59,7 @@
   <div class="compare-content">
     
     <div class="compare-header">
-      <h2 style="margin:0; font-size:22px;">Comparison</h2>
-      
+      <h2>Comparison</h2>
       <button onclick="window.closeComparison()" class="modal-close-btn">&times;</button>
     </div>
     

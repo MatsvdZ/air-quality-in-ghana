@@ -1,12 +1,19 @@
+// =========================================================
+// 1. GLOBALE VARIABELEN
+// =========================================================
 let selectedItems = [];
 let allLocations = [];
 let savedPeriod = null;
-let markers = []; 
+let markers = [];
 
+// =========================================================
+// 2. HTML GENERATOR
+// =========================================================
 function renderLocationHtml(mode, loc, data, index = null) {
     const isCard = mode === 'card';
     const isOverlay = mode === 'overlay';
     
+    // --- Header (Titel & Sluitknoppen) ---
     let headerHtml = '';
     if (isCard) {
         headerHtml = `
@@ -23,10 +30,12 @@ function renderLocationHtml(mode, loc, data, index = null) {
         headerHtml = `<h3 class="popup-title">${loc.name}</h3>`;
     }
 
+    // --- Beschrijving ---
     const descHtml = (!isCard && data.desc) 
         ? `<div class="popup-desc">${data.desc}</div>` 
         : '';
 
+    // --- Opmerkingen (Remarks) ---
     let remarkHtml = '';
     const remarkText = data.remarks; 
 
@@ -36,10 +45,12 @@ function renderLocationHtml(mode, loc, data, index = null) {
           </div>`;
     }
 
+    // --- Uitleg & Data ---
     const explHtml = data.explanation
         ? `<div class="data-explanation">${data.explanation}</div>`
         : '';
 
+    // --- Footer (Add to compare knop) ---
     const footerHtml = (!isCard)
         ? `<button class="action-btn" onclick="window.toggleComp('${loc.locationId}')">
              + Add to compare
@@ -63,7 +74,6 @@ function renderLocationHtml(mode, loc, data, index = null) {
         </div>
 
          ${descHtml}
-         
          ${remarkHtml}
 
          <div class="data-period">${data.period}</div>
@@ -81,6 +91,10 @@ function renderLocationHtml(mode, loc, data, index = null) {
       </div>
     `;
 }
+
+// =========================================================
+// 3. UI INTERACTIE (Window functies voor knoppen)
+// =========================================================
 
 window.closeOverlay = function() {
     const ov = document.getElementById("detailsOverlay");
@@ -126,7 +140,6 @@ window.showComparison = function() {
         const m = loc.history.find(h => h.dateStr === item.period);
         const val = m ? Number(m.val) : 0;
         const color = (m && val) ? getColor(val) : "#ccc";
-        
         const valText = (m && val) ? val.toFixed(2) : "No data";
 
         grid.innerHTML += renderLocationHtml('card', loc, {
@@ -158,11 +171,16 @@ window.closeComparison = function() {
     document.getElementById("compareModal").classList.remove("is-active");
 };
 
+
+// =========================================================
+// 4. MAIN APP LOGIC (Bij laden pagina)
+// =========================================================
 document.addEventListener("DOMContentLoaded", async () => {
     
     const mapElement = document.querySelector(".kumasi-map");
     if (!mapElement) return;
 
+    // --- A. KAART INITIALISATIE ---
     const map = L.map(mapElement, {
       zoomControl: false,
     }).setView([6.6796, -1.6063], 12);
@@ -178,6 +196,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     window.__leafletMap = map;
 
+    // --- B. LEGENDA LOGICA ---
     const legendContainer = document.getElementById("interactiveLegend");
     if (legendContainer) {
         legendContainer.addEventListener("click", (e) => {
@@ -194,6 +213,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     
     try {
+        // --- C. DATA OPHALEN & FORMATTEREN ---
         const response = await fetch("/api/locations");
         allLocations = await response.json();
 
@@ -201,18 +221,19 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (!Array.isArray(loc.history)) loc.history = [];
           loc.history.forEach((h) => {
             if (h.dateStr) {
-          const d = new Date(h.dateStr);
+              const d = new Date(h.dateStr);
               if (!isNaN(d)) {
                 h.rawDate = d;
-            h.dateStr = d.toLocaleDateString("en-GB", {
-              year: "numeric",
-              month: "short",
-            });
+                h.dateStr = d.toLocaleDateString("en-GB", {
+                  year: "numeric",
+                  month: "short",
+                });
               }
             }
           });
         });
 
+        // Periodes verzamelen
         const periodMap = new Map();
         allLocations.forEach((loc) => {
           loc.history.forEach((h) => {
@@ -228,106 +249,111 @@ document.addEventListener("DOMContentLoaded", async () => {
           .sort((a, b) => a[1] - b[1])
           .map((entry) => entry[0]);
 
-    function updateMapDisplay(period) {
-        const label = document.querySelector(".date-label");
-        if (label) label.textContent = `Period: ${period}`;
 
-        savedPeriod = period;
-        renderTableForMonth(period);
+        // --- D. CORE FUNCTIE: KAART UPDATEN ---
+        function updateMapDisplay(period) {
 
-        const map = window.__leafletMap; 
-        if (!map) return;
+            savedPeriod = period;
+            renderTableForMonth(period);
 
-        markers.forEach((marker) => map.removeLayer(marker));
-        markers = [];
+            const map = window.__leafletMap; 
+            if (!map) return;
 
-        allLocations.forEach((loc) => {
-            const lat = Number(loc.lat);
-            const lon = Number(loc.lon);
-            if (!lat || !lon) return;
+            // Markers verversen
+            markers.forEach((marker) => map.removeLayer(marker));
+            markers = [];
 
-            const m = loc.history.find((h) => h.dateStr === period);
-            
-            let valueText = "No data"; 
-            let color = "#ccc"; 
-            let explanation = "";
-            let currentRemark = "";
+            allLocations.forEach((loc) => {
+                const lat = Number(loc.lat);
+                const lon = Number(loc.lon);
+                if (!lat || !lon) return;
 
-            if (m) {
-                const val = Number(m.val);
-                if (!isNaN(val) && val > 0) {
-                    valueText = val.toFixed(2);
-                    color = getColor(val);
-                    if (val > 40) explanation = "Above EU annual limit";
-                    else if (val > 10) explanation = "Above WHO annual target";
-                    else explanation = "Within WHO annual target";
+                const m = loc.history.find((h) => h.dateStr === period);
+                
+                let valueText = "No data"; 
+                let color = "#ccc"; 
+                let explanation = "";
+                let currentRemark = "";
+
+                if (m) {
+                    const val = Number(m.val);
+                    if (!isNaN(val) && val > 0) {
+                        valueText = val.toFixed(2);
+                        color = getColor(val);
+                        if (val > 40) explanation = "Above EU annual limit";
+                        else if (val > 10) explanation = "Above WHO annual target";
+                        else explanation = "Within WHO annual target";
+                    }
+                    if (m.remarks) currentRemark = m.remarks;
+                    else if (m.remark) currentRemark = m.remark;
                 }
-                if (m.remarks) currentRemark = m.remarks;
-                else if (m.remark) currentRemark = m.remark;
-            }
 
-            let desc = loc.description || "No description available.";
-            if (desc && desc.length > 0) {
-                desc = desc.charAt(0).toUpperCase() + desc.slice(1);
-            }
-            
-            const displayData = {
-                period: period,
-                valText: valueText,
-                color: color,
-                explanation: explanation,
-                desc: desc,
-                remarks: currentRemark
-            };
+                let desc = loc.description || "No description available.";
+                if (desc && desc.length > 0) {
+                    desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+                }
+                
+                const displayData = {
+                    period: period,
+                    valText: valueText,
+                    color: color,
+                    explanation: explanation,
+                    desc: desc,
+                    remarks: currentRemark
+                };
 
-            const marker = L.circleMarker([lat, lon], {
+                // Marker maken
+                const marker = L.circleMarker([lat, lon], {
               color: "#fff", 
               weight: 1, 
               fillColor: color, 
               fillOpacity: 0.8, 
               radius: 12,
-            }).addTo(map);
+                }).addTo(map);
 
-            const popupContent = renderLocationHtml('popup', loc, displayData);
-            
-            marker.bindPopup(popupContent, { 
-                maxWidth: 320, 
-                autoPan: true,
-                autoPanPaddingTopLeft: [50, 50],     
-                autoPanPaddingBottomRight: [50, 300]
-            });
+                // Popup inhoud genereren
+                const popupContent = renderLocationHtml('popup', loc, displayData);
+                
+                marker.bindPopup(popupContent, { 
+                    maxWidth: 320, 
+                    autoPan: true,
+                    autoPanPaddingTopLeft: [50, 50],     
+                    autoPanPaddingBottomRight: [50, 300]
+                });
 
-            marker.on('click', (e) => {
-                if (window.innerWidth < 768) {
-                    L.DomEvent.stopPropagation(e);
-                    marker.closePopup();
-                    
-                    const overlay = document.getElementById("detailsOverlay");
-                    if (overlay) {
-                        overlay.innerHTML = renderLocationHtml('overlay', loc, displayData);
-                        overlay.classList.add("is-visible");
+                // Mobiele interactie (FlyTo)
+                marker.on('click', (e) => {
+                    if (window.innerWidth < 768) {
+                        L.DomEvent.stopPropagation(e);
+                        marker.closePopup();
+                        
+                        const overlay = document.getElementById("detailsOverlay");
+                        if (overlay) {
+                            overlay.innerHTML = renderLocationHtml('overlay', loc, displayData);
+                            overlay.classList.add("is-visible");
+                        }
+
+                        const mapHeight = map.getSize().y;
+                        const targetPoint = map.project([lat, lon], map.getZoom());
+                        const offset = mapHeight * 0.25;
+                        const newCenterPoint = targetPoint.add([0, offset]); 
+                        const newCenterLatLng = map.unproject(newCenterPoint, map.getZoom());
+
+                        map.flyTo(newCenterLatLng, map.getZoom(), {
+                            animate: true,
+                            duration: 0.2
+                        });
                     }
+                });
 
-                    const mapHeight = map.getSize().y;
-                    const targetPoint = map.project([lat, lon], map.getZoom());
-                    
-                    const offset = mapHeight * 0.25;
-                    const newCenterPoint = targetPoint.add([0, offset]); 
-                    const newCenterLatLng = map.unproject(newCenterPoint, map.getZoom());
-
-                    map.flyTo(newCenterLatLng, map.getZoom(), {
-                        animate: true,
-                        duration: 0.2
-                    });
-                }
+                markers.push(marker);
             });
+            
+            map.on('click', () => { window.closeOverlay(); });
+        }
 
-            markers.push(marker);
-        });
-        
-        map.on('click', () => { window.closeOverlay(); });
-    }
 
+        // --- E. TABEL & FILTER FUNCTIES ---
         function populatePeriodDropdown() {
           const sel = document.getElementById("periodFilter");
           if (!sel) return;
@@ -339,7 +365,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         function setPeriod(period) {
           if (!period) return;
-
           updateMapDisplay(period);
           
           const slider = document.querySelector(".time-slider");
@@ -347,7 +372,6 @@ document.addEventListener("DOMContentLoaded", async () => {
              const idx = uniquePeriods.indexOf(period);
              if (idx >= 0) slider.value = String(idx);
           }
-
           const sel = document.getElementById("periodFilter");
           if (sel) sel.value = period;
         }
@@ -355,10 +379,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         function wirePeriodDropdown() {
           const sel = document.getElementById("periodFilter");
           if (!sel) return;
-
-      sel.addEventListener("change", () => {
-        setPeriod(sel.value);
-      });
+          sel.addEventListener("change", () => {
+            setPeriod(sel.value);
+          });
         }
 
         populatePeriodDropdown();
@@ -409,8 +432,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           const tbody = document.getElementById("tableBody");
           if (!tbody) return;
           if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="4">No results</td></tr>`;
-            return;
+             tbody.innerHTML = `<tr><td colspan="4">No results</td></tr>`;
+             return;
           }
 
       tbody.innerHTML = rows
@@ -420,10 +443,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
           return `
             <tr>
-              <td>${r.locationId}</td>
-              <td>${r.name}</td>
-              <td>${r.period}</td>
-              <td>${no2Text}</td>
+                  <td>${r.locationId}</td>
+                  <td>${r.name}</td>
+                  <td>${r.period}</td>
+                  <td>${no2Text}</td>
             </tr>
           `;
         })
@@ -488,6 +511,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         wireTableFilters();
         
+
+        // --- F. SLIDER INITIALISATIE ---
         const sliderContainer = document.querySelector(".slider-container");
         
         if (uniquePeriods.length && sliderContainer) {
@@ -496,16 +521,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             sliderContainer.innerHTML = `
                 <div class="slider-header">
                     <span class="slider-static-label">Period:</span>
-                    
                     <span id="monthDisplay" class="slider-month-val">-</span>
-                    
                     <select id="yearSelect" class="year-select">
                         ${uniqueYears.map(y => `<option value="${y}">${y}</option>`).join('')}
                     </select>
                 </div>
-
                 <input type="range" class="time-slider" min="0" max="${uniquePeriods.length - 1}" step="1">
-                
                 <div class="slider-labels">
                     <span>Oldest</span>
                     <span>Newest</span>
@@ -518,10 +539,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             function syncAll(index) {
                 const period = uniquePeriods[index];
-                
                 if (period) {
                     const [month, year] = period.split(" ");
-
                     slider.value = index;
                     
                     if (yearSelect.value !== year) {
@@ -558,7 +577,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
-// Kleurenschaal (Gebaseerd op WHO 2021 & EU Normen)
+// =========================================================
+// 5. KLEURENSCHAAL
+// =========================================================
 function getColor(value) {
   if (value > 80) return "#7E0023"; // EU annual limit
   if (value > 70) return "#8F3F97"; // EU annual limit
