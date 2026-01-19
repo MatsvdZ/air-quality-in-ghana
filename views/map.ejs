@@ -59,6 +59,30 @@
   </div>
 </div>
 
+<div id="detailsOverlay" class="details-overlay"></div>
+
+<div id="comparisonDock" class="comparison-dock">
+  <span id="comparisonCount">0 locations selected</span>
+  <div class="dock-buttons">
+    <button onclick="window.clearComparison()" class="btn btn--ghost">Clear</button>
+    
+    <button onclick="window.showComparison()" class="btn">Compare</button>
+  </div>
+</div>
+
+<div id="compareModal" class="compare-modal">
+  <div class="compare-content">
+    
+    <div class="compare-header">
+      <h2 style="margin:0; font-size:22px;">Comparison</h2>
+      
+      <button onclick="window.closeComparison()" class="modal-close-btn">&times;</button>
+    </div>
+    
+    <div id="compareGrid" class="compare-grid"></div>
+  </div>
+</div>
+
 <!-- TABLE VIEW -->
 <div id="tableView" class="view">
   <label>
