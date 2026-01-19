@@ -12,7 +12,11 @@
         Time series per tube, location and measurement period.
       </p>
 
-      <div class="download-dropdown"></div>
+      <ol id="rankingList" class="ranking-list">
+        <li class="ranking-loading">Loading ranking…</li>
+      </ol>
+
+      <p class="ranking-note">Lowest average NO₂ (latest month).</p>
     </article>
 
     <!-- Mini map (zonder card eromheen) -->
@@ -24,10 +28,10 @@
     <article class="card">
       <h2 class="card__title">What is nitrogen dioxide (NO₂)?</h2>
       <p class="card__meta">
-        Nitrogen dioxide (NO₂) is a major contributor to the
-        formation of smog and a precursor to many harmful secondary pollutants,
-        including ozone and particulate matter (PM). It's highly
-        reactive with other chemicals and is a strong oxidizing agent.
+        Nitrogen dioxide (NO₂) is a major contributor to the formation of smog
+        and a precursor to many harmful secondary pollutants, including ozone
+        and particulate matter (PM). It's highly reactive with other chemicals
+        and is a strong oxidizing agent.
       </p>
     </article>
 
@@ -100,7 +104,12 @@
         const v = m?.val;
 
         // geen data? teken klein grijs puntje of skip
-        if (v === undefined || v === null || v === "" || Number.isNaN(Number(v))) {
+        if (
+          v === undefined ||
+          v === null ||
+          v === "" ||
+          Number.isNaN(Number(v))
+        ) {
           // Wil je no-data helemaal niet tonen? return;
           const dot = L.circleMarker([lat, lon], {
             color: "rgba(255,255,255,.9)",
@@ -140,4 +149,41 @@
     if (value > 10) return "#A3BF29";
     return "#59B61F";
   }
+
+  async function loadRanking() {
+    const list = document.getElementById("rankingList");
+    if (!list) return;
+
+    try {
+      const res = await fetch("/api/ranking");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      if (!Array.isArray(data) || data.length === 0) {
+        list.innerHTML = `<li class="ranking-loading">No ranking data available.</li>`;
+        return;
+      }
+
+      list.innerHTML = data
+        .slice(0, 3)
+        .map(
+          (r, i) => `
+        <li class="ranking-item">
+          <span class="rank-badge">${i + 1}</span>
+          <div class="rank-info">
+            <strong class="rank-name">${r.name || r.locationId}</strong>
+            <span class="rank-sub">${r.locationId} • ${r.period}</span>
+          </div>
+          <span class="rank-value">${Number(r.avgNo2).toFixed(1)} µg/m³</span>
+        </li>
+      `
+        )
+        .join("");
+    } catch (e) {
+      console.error(e);
+      list.innerHTML = `<li class="ranking-loading">Error loading ranking.</li>`;
+    }
+  }
+
+  loadRanking();
 </script>

@@ -34,6 +34,17 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  background-attachment: fixed; /* optional: keeps gradient stable while scrolling */
+}
+
 body {
   margin: 0;
   font-family: var(--font);
@@ -50,7 +61,6 @@ main {
   padding: var(--spacing-s);
   max-width: 75rem;
   margin: 0 auto;
-  height: 100vh;
 }
 
 /* --- DE KAART --- */
@@ -256,7 +266,7 @@ main {
   box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border);
   background: white;
-  
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -392,7 +402,7 @@ main {
 .comp-remove-btn:hover,
 .modal-close-btn:hover {
   color: var(--text);
-  background-color: rgba(0,0,0,0.05);
+  background-color: rgba(0, 0, 0, 0.05);
   border-radius: 50%;
   transition: all 0.2s;
 }
@@ -419,11 +429,11 @@ main {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  
+
   color: var(--border) !important;
   font-size: 1.5rem !important;
   font-weight: 400;
-  
+
   text-decoration: none;
   background: none;
   border: none;
@@ -448,8 +458,8 @@ main {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
 
-  padding: 0.75rem 1rem; 
-  
+  padding: 0.75rem 1rem;
+
   border-radius: 1rem;
   box-shadow: var(--shadow);
   width: 90%;
@@ -494,14 +504,14 @@ main {
   padding: 0 0.5rem;
   min-height: 2rem !important;
   line-height: 1.75rem;
-  
+
   border-radius: 0.375rem;
   border: 1px solid var(--border);
-  
+
   font-family: var(--font);
   font-size: 0.8rem;
   color: var(--text);
-  
+
   background: white;
   cursor: pointer;
   outline: none;
@@ -547,13 +557,13 @@ main {
   background: var(--card);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
-  border-radius: 1rem; 
+  border-radius: 1rem;
   padding: 0.5rem 0.5rem 0.5rem 1.25rem;
-  
+
   display: flex;
   align-items: center;
   gap: 1rem;
-  
+
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -673,7 +683,7 @@ main {
 
 /* --- JS HELPER CLASSES / UTILITIES --- */
 .tube-id-wrapper {
-  margin-bottom: 0.2rem !important; 
+  margin-bottom: 0.2rem !important;
 }
 
 .popup-coords {
@@ -736,6 +746,9 @@ main {
   border-radius: var(--components-card-corners);
   padding: var(--spacing-s);
   box-shadow: var(--shadow);
+
+  max-width: 100%;
+
 }
 
 .card__title {
@@ -921,10 +934,6 @@ main {
   transform: translateX(0);
 }
 
-.app-main {
-  padding-bottom: 110px;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .bottom-nav__indicator,
   .bottom-nav__item,
@@ -932,6 +941,8 @@ main {
     transition: none !important;
   }
 }
+
+/* --- Data Table --- */
 
 .view {
   display: none;
@@ -948,10 +959,111 @@ main {
   margin: 12px 0 16px;
 }
 
+/* ---------- Table filters: clean + consistent ---------- */
+.table-filters {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 12px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.06);
+}
+
+/* Mobile: 1 column */
+@media (max-width: 520px) {
+  .table-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Small+ : 2 columns */
+@media (min-width: 521px) {
+  .table-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Desktop: 4 columns (period, search, min, max) + row for checkbox/buttons */
+@media (min-width: 900px) {
+  .table-filters {
+    grid-template-columns: 1.1fr 1.4fr 0.8fr 0.8fr;
+  }
+}
+
+/* Use the same field styles as admin UI */
+.table-filters .field {
+  display: grid;
+  gap: 6px;
+}
+
+.table-filters .field__label {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+}
+
+/* Input/select inside filters */
+.table-filters .input,
+.table-filters select {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 16px; /* prevents iOS zoom */
+  outline: none;
+}
+
+.table-filters .input:focus,
+.table-filters select:focus {
+  border-color: rgba(15, 23, 42, 0.35);
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.08);
+}
+
+/* Search input hint icon (optional, subtle) */
+#qFilter {
+  padding-left: 12px;
+}
+
+/* Checkbox row */
+.table-filters .checkbox {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.table-filters .checkbox input {
+  width: 18px;
+  height: 18px;
+}
+
+/* Buttons row behavior */
+.table-filters #resetFilters {
+  grid-column: 1 / -1;
+  height: 44px;
+}
+
 .table-wrap {
   overflow: auto;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
+}
+
+/* Zorg dat content niet onder bottom navbar verdwijnt */
+#tableView {
+  padding-bottom: 6em;
 }
 
 .data-table {
@@ -1021,7 +1133,7 @@ main {
 .container {
   max-width: 980px;
   margin: 0 auto;
-  padding: 16px;
+
 }
 
 .page-head {
@@ -1268,4 +1380,76 @@ textarea:focus {
   .home-map-preview {
     height: 220px;
   }
+}
+
+/* ---------- Home ranking card ---------- */
+.ranking-list {
+  list-style: none;
+  padding: 0 2px;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.ranking-loading {
+  color: #64748b;
+  padding: 10px 0;
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px; /* iets compacter */
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* voorkomt dat children buiten de card tekenen */
+}
+
+.rank-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  background: #0f172a;
+  color: #fff;
+}
+
+.rank-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rank-name {
+  display: block;
+  font-weight: 900;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-sub {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.rank-value {
+  font-weight: 900;
+  color: #166534;
+  flex: 0 1 auto; /* 🔑 mag krimpen */
+  min-width: 0; /* 🔑 nodig voor ellipsis in flex */
+  white-space: normal;
+}
+
+.ranking-note {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 12px;
 }

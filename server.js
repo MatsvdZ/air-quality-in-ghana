@@ -694,6 +694,63 @@ app.get("/api/no2", async (req, res) => {
   }
 });
 
+app.get("/api/ranking", async (req, res) => {
+  try {
+    // 1) Pak de meest recente measurement (op basis van startdate)
+    const latest = await Measurement.findOne({ no2: { $ne: null } })
+      .sort({ start: -1 })
+      .lean();
+
+    if (!latest) return res.json([]);
+
+    // 2) Maak een YYYY-MM string van latest.start
+    const d = new Date(latest.start);
+    const latestPeriod = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+    // 3) Pak alle measurements van die maand (match op start)
+    const startOfMonth = new Date(`${latestPeriod}-01T00:00:00.000Z`);
+    const startOfNextMonth = new Date(startOfMonth);
+    startOfNextMonth.setMonth(startOfMonth.getMonth() + 1);
+
+    const ranking = await Measurement.aggregate([
+      {
+        $match: {
+          no2: { $ne: null },
+          start: { $gte: startOfMonth, $lt: startOfNextMonth },
+        },
+      },
+      {
+        $group: {
+          _id: "$locationId",
+          avgNo2: { $avg: "$no2" },
+        },
+      },
+      { $sort: { avgNo2: 1 } }, // laag = beter
+      { $limit: 3 },
+    ]);
+
+    // 4) Location info erbij zoeken
+    const locs = await Location.find({
+      locationId: { $in: ranking.map((r) => r._id) },
+    }).lean();
+
+    const result = ranking.map((r) => {
+      const loc = locs.find((l) => l.locationId === r._id);
+      return {
+        locationId: r._id,
+        name: loc?.name || r._id,
+        avgNo2: Number(r.avgNo2.toFixed(1)),
+        period: latestPeriod,
+      };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error("❌ /api/ranking failed:", err);
+    res.status(500).json({ error: "Ranking failed" });
+  }
+});
+
 // 404 Handler (Als pagina niet bestaat)
 app.use((req, res) => res.status(404).send("<h1>404 - Page not found</h1>"));
 

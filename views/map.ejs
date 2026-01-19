@@ -10,7 +10,6 @@
 <!-- MAP VIEW -->
 <div id="mapView" class="view is-active">
   <div class="map-wrapper">
-    
     <div class="kumasi-map"></div>
 
     <div id="interactiveLegend" class="interactive-legend">
@@ -23,25 +22,42 @@
 
       <div class="legend-expanded">
         <div class="legend-header">
-            <p>NO₂ (µg/m³)</p>
-            <span class="close-btn">&times;</span>
+          <p>NO₂ (µg/m³)</p>
+          <span class="close-btn">&times;</span>
         </div>
-        <div class="legend-row"><span class="dot" style="background:#59B61F"></span> 0 – 10</div>
-        <div class="legend-row"><span class="dot" style="background:#A3BF29"></span> 10 – 20</div>
-        <div class="legend-row"><span class="dot" style="background:#EEC732"></span> 20 – 30</div>
-        <div class="legend-row"><span class="dot" style="background:#ECAA33"></span> 30 – 40</div>
-        <div class="legend-row"><span class="dot" style="background:#EA8C34"></span> 40 – 50</div>
-        <div class="legend-row"><span class="dot" style="background:#DA5634"></span> 50 – 60</div>
-        <div class="legend-row"><span class="dot" style="background:#C92033"></span> 60 – 70</div>
-        <div class="legend-row"><span class="dot" style="background:#8F3F97"></span> 70 – 80</div>
-        <div class="legend-row"><span class="dot" style="background:#7E0023"></span> > 80</div>
+        <div class="legend-row">
+          <span class="dot" style="background: #59b61f"></span> 0 – 10
+        </div>
+        <div class="legend-row">
+          <span class="dot" style="background: #a3bf29"></span> 10 – 20
+        </div>
+        <div class="legend-row">
+          <span class="dot" style="background: #eec732"></span> 20 – 30
+        </div>
+        <div class="legend-row">
+          <span class="dot" style="background: #ecaa33"></span> 30 – 40
+        </div>
+        <div class="legend-row">
+          <span class="dot" style="background: #ea8c34"></span> 40 – 50
+        </div>
+        <div class="legend-row">
+          <span class="dot" style="background: #da5634"></span> 50 – 60
+        </div>
+        <div class="legend-row">
+          <span class="dot" style="background: #c92033"></span> 60 – 70
+        </div>
+        <div class="legend-row">
+          <span class="dot" style="background: #8f3f97"></span> 70 – 80
+        </div>
+        <div class="legend-row">
+          <span class="dot" style="background: #7e0023"></span> > 80
+        </div>
       </div>
     </div>
 
     <div class="slider-container">
-        <p class="slider-loading">Loading data...</p>
+      <p class="slider-loading">Loading data...</p>
     </div>
-
   </div>
 </div>
 
@@ -50,45 +66,66 @@
 <div id="comparisonDock" class="comparison-dock">
   <span id="comparisonCount">0 locations selected</span>
   <div class="dock-buttons">
-    <button onclick="window.clearComparison()" class="btn btn--ghost">Clear</button>
+    <button onclick="window.clearComparison()" class="btn btn--ghost">
+      Clear
+    </button>
     <button onclick="window.showComparison()" class="btn">Compare</button>
   </div>
 </div>
 
 <div id="compareModal" class="compare-modal">
   <div class="compare-content">
-    
     <div class="compare-header">
       <h2>Comparison</h2>
-      <button onclick="window.closeComparison()" class="modal-close-btn">&times;</button>
+      <button onclick="window.closeComparison()" class="modal-close-btn">
+        &times;
+      </button>
     </div>
-    
+
     <div id="compareGrid" class="compare-grid"></div>
   </div>
 </div>
 
 <!-- TABLE VIEW -->
 <div id="tableView" class="view">
-  <label>
-    Period
-    <select id="periodFilter">
-      <option value="">(choose)</option>
-    </select>
-  </label>
   <div class="table-filters">
-    <label>
-      Search
-      <input id="qFilter" type="text" placeholder="Location ID or name" />
+    <label class="field">
+      <span class="field__label">Period</span>
+      <select id="periodFilter" class="input">
+        <option value="">All</option>
+      </select>
     </label>
 
-    <label>
-      Min NO₂
-      <input id="minNo2" type="number" step="0.1" placeholder="e.g. 10" />
+    <label class="field">
+      <span class="field__label">Search</span>
+      <input
+        id="qFilter"
+        class="input"
+        type="text"
+        placeholder="Location ID or name"
+      />
     </label>
 
-    <label>
-      Max NO₂
-      <input id="maxNo2" type="number" step="0.1" placeholder="e.g. 40" />
+    <label class="field">
+      <span class="field__label">Min NO₂</span>
+      <input
+        id="minNo2"
+        class="input"
+        type="number"
+        step="0.1"
+        placeholder="10"
+      />
+    </label>
+
+    <label class="field">
+      <span class="field__label">Max NO₂</span>
+      <input
+        id="maxNo2"
+        class="input"
+        type="number"
+        step="0.1"
+        placeholder="40"
+      />
     </label>
 
     <label class="checkbox">
