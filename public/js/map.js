@@ -58,16 +58,15 @@ function renderLocationHtml(mode, loc, data, index = null) {
         : '';
 
     const containerClass = isCard ? 'compare-card' : 'custom-popup';
-    const lat = Number(loc.lat).toFixed(4);
-    const lon = Number(loc.lon).toFixed(4);
+    const lat = Number(loc.lat).toFixed(6);
+    const lon = Number(loc.lon).toFixed(6);
 
     return `
       <div class="${containerClass}">
          ${headerHtml}
          
         <div class="${isCard ? 'comp-id' : 'popup-id'} tube-id-wrapper">
-          Tube ID: ${loc.locationId}
-        </div>
+          Tube ID: ${data.tubeId}    </div>
          
         <div class="popup-coords">
           ${lat}, ${lon}
@@ -274,6 +273,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 let color = "#ccc"; 
                 let explanation = "";
                 let currentRemark = "";
+                let currentTubeId = "-";
 
                 if (m) {
                     const val = Number(m.val);
@@ -288,6 +288,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                     else if (m.remark) currentRemark = m.remark;
                 }
 
+                if (m.tubeId) {
+                        currentTubeId = m.tubeId;
+                    }
+
                 let desc = loc.description || "No description available.";
                 if (desc && desc.length > 0) {
                     desc = desc.charAt(0).toUpperCase() + desc.slice(1);
@@ -299,7 +303,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     color: color,
                     explanation: explanation,
                     desc: desc,
-                    remarks: currentRemark
+                    remarks: currentRemark,
+                    tubeId: currentTubeId
                 };
 
                 // Marker maken

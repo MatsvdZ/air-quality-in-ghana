@@ -86,6 +86,11 @@ async function run() {
       obj[key] = parseCellValue(cell.value);
     });
 
+    // Vul startdatetime in als die mist maar period er is
+    if ((!obj.startdatetime || obj.startdatetime === '') && obj.period) {
+        obj.startdatetime = obj.period;
+    }
+
     const doc = {
       tubeId: obj.tube_id ?? null,
       locationId: obj.location_id ?? null,
@@ -97,7 +102,7 @@ async function run() {
       raw: obj,
     };
 
-    // minimale validatie
+    // Validatie
     if (!obj.location_id || !obj.startdatetime) return;
 
     measurements.push(doc);
