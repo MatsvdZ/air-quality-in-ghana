@@ -118,7 +118,7 @@ window.toggleComp = function(id) {
     const count = document.getElementById("comparisonCount");
     if (dock && count) {
         dock.classList.add("is-visible");
-        count.innerText = `${selectedItems.length} locations selected`;
+        count.innerText = `${selectedItems.length} location(s) selected`;
     }
     
     window.closeOverlay();
