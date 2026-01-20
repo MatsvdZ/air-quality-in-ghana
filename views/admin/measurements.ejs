@@ -1,7 +1,7 @@
 <section class="container">
   <header class="page-head">
     <h1 class="h1"><%= title %></h1>
-    <p class="muted">Filter and browse measurements.</p>
+    <p class="page__subtitle">Filter and browse measurements.</p>
   </header>
 
   <form class="card form" method="GET" action="/admin/measurements" style="margin-bottom:12px;">
@@ -44,7 +44,7 @@
   </div>
 
   <div class="card stack">
-    <p class="muted" style="margin:0;">
+    <p class="page__subtitle" style="margin:0;">
       Showing <b><%= measurements.length %></b> of <b><%= total %></b> results • Page <b><%= page %></b> / <b><%= totalPages %></b>
     </p>
 

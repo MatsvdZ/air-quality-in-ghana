@@ -16,7 +16,7 @@
         <li class="ranking-loading">Loading ranking…</li>
       </ol>
 
-      <p class="ranking-note">Lowest average NO₂ (latest month).</p>
+      <p class="ranking-note">Lowest NO₂ (latest month).</p>
     </article>
 
     <!-- Mini map (zonder card eromheen) -->
@@ -43,6 +43,55 @@
         </a>
       </p>
     </div>
+
+    <!-- About us -->
+    <article class="card">
+      <h2 class="card__title">About us</h2>
+
+      <details class="accordion" open>
+        <summary class="accordion__summary">About this platform</summary>
+        <div class="accordion__content">
+          <p class="card__meta">
+            This webportal shows air quality data collected in Ghana with the
+            aim of making nitrogen dioxide data more visible and understandable
+            for citizens and researchers. Our webportal shows measurements
+            collected with low-cost sensors (air quality tubes) at various
+            locations in Ghana. We aim to provide insights into air pollution
+            levels, trends, and potential health impacts.
+          </p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary class="accordion__summary">Measuring air quality</summary>
+        <div class="accordion__content">
+          <p class="card__meta">
+            The air quality tubes used in this project are passive diffusion
+            tubes that absorb nitrogen dioxide (NO₂) from the air over a monthly
+            period. After exposure, the tubes are sent to a laboratory for
+            analysis to determine the average NO₂ concentration during the
+            exposure period. This method provides a cost-effective way to
+            monitor air quality across multiple locations.
+          </p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary class="accordion__summary">
+          Collaboration and contributions
+        </summary>
+        <div class="accordion__content">
+          <p class="card__meta">
+            This project is a collaboration between the KNMI (Royal Netherlands
+            Meteorological Institute) and the KNUST (Kwame Nkrumah University of
+            Science and Technology) in Ghana. The KNUST team is responsible for
+            deploying the air quality tubes and collecting the data, while the
+            KNMI and their partners handle the data processing, analysis, and
+            webportal development.
+          </p>
+        </div>
+      </details>
+    </article>
   </div>
 </section>
 
@@ -186,4 +235,59 @@
   }
 
   loadRanking();
+
+  document.querySelectorAll(".accordion").forEach((details) => {
+    const summary = details.querySelector(".accordion__summary");
+    const content = details.querySelector(".accordion__content");
+
+    // Helper: zet hoogte correct als hij open start
+    if (details.open) {
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
+
+    summary.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      const isOpen = details.open;
+
+      if (isOpen) {
+        // --- CLOSE (smooth) ---
+        // 1) Zet eerst current hoogte (van auto naar px)
+        content.style.maxHeight = content.scrollHeight + "px";
+
+        // 2) Force reflow zodat de browser dit "pakt"
+        content.offsetHeight;
+
+        // 3) Animeer naar 0
+        content.style.maxHeight = "0px";
+
+        // 4) Pas NA de animatie details sluiten (anders springt het)
+        const onEnd = () => {
+          details.open = false;
+          content.removeEventListener("transitionend", onEnd);
+        };
+        content.addEventListener("transitionend", onEnd);
+      } else {
+        // --- OPEN (smooth) ---
+        // 1) Open details eerst zodat content meetbaar is
+        details.open = true;
+
+        // 2) Zet max-height naar 0 (startpunt)
+        content.style.maxHeight = "0px";
+
+        // 3) Force reflow
+        content.offsetHeight;
+
+        // 4) Animeer naar scrollHeight
+        content.style.maxHeight = content.scrollHeight + "px";
+      }
+    });
+
+    // Als content verandert (responsive), pas hoogte aan
+    window.addEventListener("resize", () => {
+      if (details.open) {
+        content.style.maxHeight = content.scrollHeight + "px";
+      }
+    });
+  });
 </script>
