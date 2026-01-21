@@ -164,8 +164,7 @@ div#mapView,
   border-radius: var(--components-card-corners);
   border: 1px solid var(--border);
   overflow: hidden;
-  height: 884px;
-}
+  height: clamp(420px, 70vh, 680px);}
 
 @media (max-width: 768px) {
   .map-wrapper {
@@ -734,6 +733,8 @@ div#mapView,
 /* PAGE */
 .page {
   max-width: 980px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .page__header {
@@ -1524,4 +1525,143 @@ details[open] .accordion__content {
 
 .accordion__content p {
   margin: 8px 0 0;
+}
+
+/* LARGE SCREEN ADJUSTMENTS */
+@media (min-width: 780px) {
+  main {
+    padding: 28px;
+  }
+
+  .page__title {
+    font-size: 36px;
+  }
+
+  .page__subtitle,
+  .card__meta {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .card__title {
+    font-size: 20px;
+  }
+}
+
+@media (min-width: 780px) {
+  .grid {
+    grid-template-columns: 1.1fr 1fr 1fr;
+    gap: 18px;
+  }
+
+  /* Kaartpreview breder: neemt 2 kolommen */
+  .home-map-preview {
+    grid-column: span 2;
+    height: 280px;
+  }
+
+  /* Ranking card netjes als 1 kolom */
+  .grid > .card:first-child {
+    grid-column: span 1;
+  }
+}
+
+@media (min-width: 780px) {
+  .grid {
+    gap: 22px;
+  }
+
+  .home-map-preview {
+    height: 320px;
+  }
+}
+
+/* TOPNAV STYLING AND MEDIAQUERIES */
+/* ---------- Top navigation (desktop) ---------- */
+.top-nav {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  background: white;
+  border-bottom: 1px solid var(--border);
+}
+
+.top-nav__inner {
+  max-width: 75rem;
+  margin: 0 auto;
+  padding: 14px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.top-nav__logo {
+  font-weight: 900;
+  text-decoration: none;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.top-nav__links {
+  display: flex;
+  gap: 18px;
+}
+
+.top-nav__links a {
+  text-decoration: none;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.top-nav__links a.is-active {
+  background: var(--muted);
+  color: white;
+}
+
+@media (min-width: 780px) {
+  .top-nav {
+    display: block;
+  }
+
+  .bottom-nav {
+    display: none;
+  }
+
+  main {
+    padding-bottom: 28px;
+  }
+}
+
+/* Desktop layout: NO2 + About naast elkaar */
+@media (min-width: 780px) {
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  .card--ranking,
+  .home-map-preview {
+    grid-column: span 1;
+  }
+
+    .grid > * {
+    grid-column: auto;
+  }
+
+  /* NO2 en About nemen elk één kolom */
+  .card--no2,
+  .card--about {
+    grid-column: span 1;
+  }
+
+  .hint {
+    display: none;
+  }
 }

@@ -1,0 +1,24 @@
+<nav class="top-nav">
+  <div class="top-nav__inner">
+    <a href="/" class="top-nav__logo">Air Quality Kumasi</a>
+
+    <div class="top-nav__links">
+      <a href="/" class="<%= activePage === 'home' ? 'is-active' : '' %>"
+        >Home</a
+      >
+      <a href="/map" class="<%= activePage === 'map' ? 'is-active' : '' %>"
+        >Map</a
+      >
+      <a
+        href="/download"
+        class="<%= activePage === 'download' ? 'is-active' : '' %>"
+        >Download</a
+      >
+      <a
+        href="/admin"
+        class="<%= activePage === 'admin' ? 'is-active' : '' %>"
+        >Admin</a
+      >
+    </div>
+  </div>
+</nav>
