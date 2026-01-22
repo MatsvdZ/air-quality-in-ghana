@@ -110,7 +110,9 @@ In addition, a protected admin environment allows researchers to manage location
 
 ## Authors
 
-This project was developed as part of a school collaboration with KNMI in the Netherlands and KNUST in Ghana.
+This project was developed as part of a collaboration reagarding students from the Amsterdam University of Applied Sciences together with the Koninklijk Nederlands Meteorologisch Instituut (KNMI) in the Netherlands and Kwame Nkrumah University of Science and Technology in Ghana.
+
+The students responsible for this project are:
 
 	•	Esmae Grapendaal
 	•	Mats van der Zwan
