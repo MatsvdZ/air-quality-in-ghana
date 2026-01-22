@@ -2,7 +2,7 @@
 A web-based platform that visualizes nitrogen dioxide (NO₂) air quality measurements in Kumasi, Ghana.
 The portal is designed to support public awareness and scientific research, with a strong focus on mobile-first design, low data usage, and data transparency.
 
-🔗 Live demo: https://air-quality-in-ghana-production.up.railway.app/
+🔗 Live site: https://air-quality-in-ghana-production.up.railway.app/
 
 
 ## Project overview
