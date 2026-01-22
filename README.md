@@ -48,8 +48,7 @@ In addition, a protected admin environment allows researchers to manage location
 
 ## Installation & setup
 1. Clone the repository
-   `git clone https://github.com/your-username/air-quality-in-Ghana.git
-    cd air-quality-in-Ghana`
+   `git clone https://github.com/MatsvdZ/air-quality-in-ghana.git`
 
 2. Install dependencies
    `npm install`
