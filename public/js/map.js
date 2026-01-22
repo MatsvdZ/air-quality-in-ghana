@@ -13,54 +13,58 @@ function renderLocationHtml(mode, loc, data, index = null) {
     const isCard = mode === 'card';
     const isOverlay = mode === 'overlay';
     
-    // --- Header (Titel & Sluitknoppen) ---
+    // --- Header Generatie ---
     let headerHtml = '';
     if (isCard) {
+        // - Card: Titel + kruisje om item te verwijderen
         headerHtml = `
             <div class="comp-header-row">
                 <h4 class="comp-title">${loc.name}</h4>
                 <span class="comp-remove-btn" onclick="window.removeItem(${index})">&times;</span>
             </div>`;
     } else if (isOverlay) {
+        // - Overlay: Titel + knop om balk te sluiten (Mobiel)
         headerHtml = `
             <a href="javascript:void(0)" class="leaflet-popup-close-button" onclick="window.closeOverlay()">×</a>
             <h3 class="popup-title">${loc.name}</h3>
         `;
     } else {
+        // - Popup: Alleen titel (Leaflet regelt het kruisje)
         headerHtml = `<h3 class="popup-title">${loc.name}</h3>`;
     }
 
-    // --- Beschrijving ---
+    // Beschrijving & Remarks (alleen tonen als het geen compacte 'card' is)
     const descHtml = (!isCard && data.desc) 
         ? `<div class="popup-desc">${data.desc}</div>` 
         : '';
 
-    // --- Opmerkingen (Remarks) ---
     let remarkHtml = '';
     const remarkText = data.remarks; 
 
     if (!isCard && remarkText && typeof remarkText === 'string' && remarkText.trim() !== "") {
         remarkHtml = `
-          <div class="popup-remark">  <strong>Note:</strong> ${remarkText}
+          <div class="popup-remark">Note: ${remarkText}
           </div>`;
     }
 
-    // --- Uitleg & Data ---
+    // Contextuele uitleg (bijv. "Above EU annual limit")
     const explHtml = data.explanation
         ? `<div class="data-explanation">${data.explanation}</div>`
         : '';
 
-    // --- Footer (Add to compare knop) ---
+    // De '+ Add to compare' knop (Niet tonen als we al aan het vergelijken zijn)
     const footerHtml = (!isCard)
         ? `<button class="action-btn" onclick="window.toggleComp('${loc.locationId}')">
              + Add to compare
            </button>`
         : '';
 
+    // CSS classes bepalen voor de juiste styling
     const containerClass = isCard ? 'compare-card' : 'custom-popup';
     const lat = Number(loc.lat).toFixed(6);
     const lon = Number(loc.lon).toFixed(6);
 
+    // De uiteindelijke HTML samenstellen
     return `
       <div class="${containerClass}">
          ${headerHtml}
@@ -92,21 +96,22 @@ function renderLocationHtml(mode, loc, data, index = null) {
 }
 
 // =========================================================
-// 3. UI INTERACTIE (Window functies voor knoppen)
+// 3. UI INTERACTIE (Vergelijkingsfunctie)
 // =========================================================
-
 window.closeOverlay = function() {
     const ov = document.getElementById("detailsOverlay");
     if(ov) ov.classList.remove("is-visible");
 };
 
 window.toggleComp = function(id) {
+    // Validatie 1: Zit deze locatie er al in?
     const exists = selectedItems.find(item => item.id === id && item.period === savedPeriod);
     if (exists) {
         alert("This location from this period is already in the comparison.");
         return;
     }
     
+    // Validatie 2: Maximaal 2 locaties toestaan
     if (selectedItems.length >= 2) {
         alert("You can compare a maximum of 2 locations.");
         return;
@@ -114,6 +119,7 @@ window.toggleComp = function(id) {
     
     selectedItems.push({ id: id, period: savedPeriod });
     
+    // Update de UI
     const dock = document.getElementById("comparisonDock");
     const count = document.getElementById("comparisonCount");
     if (dock && count) {
@@ -133,6 +139,7 @@ window.showComparison = function() {
     grid.innerHTML = "";
     
     selectedItems.forEach((item, index) => {
+        // Haal de data opnieuw op uit de historie, want de slider kan veranderd zijn
         const loc = allLocations.find(l => l.locationId === item.id);
         if (!loc) return;
 
@@ -140,11 +147,23 @@ window.showComparison = function() {
         const val = m ? Number(m.val) : 0;
         const color = (m && val) ? getColor(val) : "#ccc";
         const valText = (m && val) ? val.toFixed(2) : "No data";
+        const currentTubeId = (m && m.tubeId) ? m.tubeId : "-";
 
+        // Bereken de context ("Above limit") specifiek voor de vergelijking
+        let explanation = "";
+        if (m && val > 0) {
+            if (val > 40) explanation = "Above EU annual limit";
+            else if (val > 10) explanation = "Above WHO annual target";
+            else explanation = "Within WHO annual target";
+        }
+
+        // Render de kaart in 'card' modus
         grid.innerHTML += renderLocationHtml('card', loc, {
             period: item.period,
             valText: valText,
-            color: color
+            color: color,
+            tubeId: currentTubeId,
+            explanation: explanation
         }, index);
     });
     modal.classList.add("is-active");
@@ -156,7 +175,7 @@ window.removeItem = function(index) {
         window.closeComparison();
         window.clearComparison();
     } else {
-        window.showComparison();
+        window.showComparison(); // Ververs het scherm
         document.getElementById("comparisonCount").innerText = `${selectedItems.length} locations selected`;
     }
 };
@@ -172,7 +191,7 @@ window.closeComparison = function() {
 
 
 // =========================================================
-// 4. MAIN APP LOGIC (Bij laden pagina)
+// 4. MAIN APP LOGIC
 // =========================================================
 document.addEventListener("DOMContentLoaded", async () => {
     
@@ -182,7 +201,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // --- A. KAART INITIALISATIE ---
     const map = L.map(mapElement, {
       zoomControl: false,
-    }).setView([6.6796, -1.6063], 12);
+    }).setView([6.6596, -1.6063], 12);
 
     L.control.zoom({ position: 'topleft' }).addTo(map);
 
@@ -213,9 +232,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     try {
         // --- C. DATA OPHALEN & FORMATTEREN ---
+        // Async fetch zorgt dat de interface pas laadt als data binnen is
         const response = await fetch("/api/locations");
         allLocations = await response.json();
 
+        // Data cleaning: Strings omzetten naar bruikbare Date objecten en leesbare tekst
         allLocations.forEach((loc) => {
           if (!Array.isArray(loc.history)) loc.history = [];
           loc.history.forEach((h) => {
@@ -232,7 +253,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           });
         });
 
-        // Periodes verzamelen
+        // Verzamelen van unieke periodes voor de slider
         const periodMap = new Map();
         allLocations.forEach((loc) => {
           loc.history.forEach((h) => {
@@ -250,15 +271,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
         // --- D. CORE FUNCTIE: KAART UPDATEN ---
+        // Wordt aangeroepen bij elke slider beweging
         function updateMapDisplay(period) {
 
             savedPeriod = period;
-            renderTableForMonth(period);
+            renderTableForMonth(period); // (Update ook de tabel als die er is)
 
             const map = window.__leafletMap; 
             if (!map) return;
 
-            // Markers verversen
+            // Oude markers verwijderen
             markers.forEach((marker) => map.removeLayer(marker));
             markers = [];
 
@@ -267,14 +289,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const lon = Number(loc.lon);
                 if (!lat || !lon) return;
 
+                // Zoek de meting voor deze specifieke maand
                 const m = loc.history.find((h) => h.dateStr === period);
                 
+                // Standaard waardes als er geen data is
                 let valueText = "No data"; 
                 let color = "#ccc"; 
                 let explanation = "";
                 let currentRemark = "";
                 let currentTubeId = "-";
 
+                // Als er data is: bepaal kleur en teksten
                 if (m) {
                     const val = Number(m.val);
                     if (!isNaN(val) && val > 0) {
@@ -326,18 +351,22 @@ document.addEventListener("DOMContentLoaded", async () => {
                     autoPanPaddingBottomRight: [50, 300]
                 });
 
-                // Mobiele interactie (FlyTo)
+                // --- MOBILE FIRST INTERACTIE ---
                 marker.on('click', (e) => {
+                    // Detecteer mobiel scherm (< 768px)
                     if (window.innerWidth < 768) {
                         L.DomEvent.stopPropagation(e);
-                        marker.closePopup();
+                        marker.closePopup(); // Onderdruk de standaard popup
                         
+                        // Vul de mobiele overlay en schuif deze in beeld
                         const overlay = document.getElementById("detailsOverlay");
                         if (overlay) {
                             overlay.innerHTML = renderLocationHtml('overlay', loc, displayData);
                             overlay.classList.add("is-visible");
                         }
 
+                        // 'FlyTo' animatie: verschuif de kaart iets naar boven 
+                        // zodat het punt zichtbaar blijft boven de overlay
                         const mapHeight = map.getSize().y;
                         const targetPoint = map.project([lat, lon], map.getZoom());
                         const offset = mapHeight * 0.25;
@@ -356,7 +385,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             
             map.on('click', () => { window.closeOverlay(); });
         }
-
 
         // --- E. TABEL & FILTER FUNCTIES ---
         function populatePeriodDropdown() {
@@ -521,8 +549,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const sliderContainer = document.querySelector(".slider-container");
         
         if (uniquePeriods.length && sliderContainer) {
+            // Dynamisch: Haal unieke jaren uit de data zodat de dropdown altijd klopt
             const uniqueYears = [...new Set(uniquePeriods.map(p => p.split(" ")[1]))];
             
+            // HTML toevoegen voor slider + dropdown
             sliderContainer.innerHTML = `
                 <div class="slider-header">
                     <span class="slider-static-label">Period:</span>
@@ -542,6 +572,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const yearSelect = document.getElementById("yearSelect");
             const monthDisplay = document.getElementById("monthDisplay");
 
+            // Slider bewegen = Dropdown update = Kaart update
             function syncAll(index) {
                 const period = uniquePeriods[index];
                 if (period) {
@@ -562,6 +593,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             }
 
+            // Event Listeners
             slider.addEventListener("input", (e) => syncAll(e.target.value));
 
             yearSelect.addEventListener("change", (e) => {
@@ -570,6 +602,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (firstIndex !== -1) syncAll(firstIndex);
             });
 
+            // Startpositie: toon direct de meest recente data
             slider.value = slider.max;
             syncAll(slider.value);
 
@@ -586,11 +619,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 // 5. KLEURENSCHAAL
 // =========================================================
 function getColor(value) {
-  if (value > 80) return "#7E0023"; // EU annual limit
-  if (value > 70) return "#8F3F97"; // EU annual limit
-  if (value > 60) return "#C92033"; // EU annual limit
-  if (value > 50) return "#DA5634"; // EU annual limit
-  if (value > 40) return "#EA8C34"; // EU annual limit
+  if (value > 80) return "#7E0023"; // above EU annual limit
+  if (value > 70) return "#8F3F97"; // above EU annual limit
+  if (value > 60) return "#C92033"; // above EU annual limit
+  if (value > 50) return "#DA5634"; // above EU annual limit
+  if (value > 40) return "#EA8C34"; // above EU annual limit
   if (value > 30) return "#ECAA33"; // above WHO target
   if (value > 20) return "#EEC732"; // above WHO target
   if (value > 10) return "#A3BF29"; // above WHO target

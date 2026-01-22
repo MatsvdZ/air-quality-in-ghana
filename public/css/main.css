@@ -346,11 +346,11 @@ div#mapView,
   background-color: var(--card);
   color: var(--text);
   box-sizing: border-box;
-  padding: 1.25rem;
+  padding: 1rem;
 }
 
 .compare-card {
-  padding: 1.25rem;
+  padding: 1rem;
   border-radius: var(--components-card-corners);
   box-shadow: 0 0.125rem 0.3125rem rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border);
@@ -394,6 +394,7 @@ div#mapView,
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  margin-top: 0.5rem;
 }
 
 /* DATA CONTENT STYLING */
@@ -401,9 +402,9 @@ div#mapView,
   background-color: var(--secondary-btn-bg);
   border: 1px solid var(--secondary-btn-border);
   border-radius: var(--components-button-corners);
-  padding: 1rem;
+  padding: 0.8rem;
   text-align: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .data-period {
@@ -644,8 +645,8 @@ div#mapView,
   width: 100%;
   max-width: 60rem;
   border-radius: var(--components-card-corners);
-  padding: 2rem;
-  max-height: 90vh;
+  padding: 1.75rem;
+  max-height: 95vh;
   overflow-y: auto;
   position: relative;
   box-shadow: var(--shadow);
@@ -657,7 +658,7 @@ div#mapView,
   align-items: center;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .compare-header h2 {
@@ -816,6 +817,7 @@ div#mapView,
   font-weight: 600;
   color: white;
   background: var(--muted);
+  cursor: pointer;
   transition:
     transform 120ms ease,
     opacity 120ms ease;
@@ -871,7 +873,6 @@ div#mapView,
 .comp-remove-btn {
   cursor: pointer;
   color: var(--gray-400);
-  font-weight: 700;
   padding: 0 0.3125rem;
   font-size: 1.2rem;
 }
@@ -891,7 +892,6 @@ div#mapView,
 .comp-remove-btn:hover,
 .modal-close-btn:hover {
   color: var(--text);
-  background-color: rgba(0, 0, 0, 0.05);
   border-radius: 50%;
   transition: all 0.2s;
 }
