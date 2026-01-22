@@ -1,9 +1,3 @@
-/**
- * Import Excel → MongoDB
- * Sheet 0: NO2 measurements
- * Sheet 1: Locations
- */
-
 require("dotenv").config();
 
 const mongoose = require("mongoose");
@@ -42,11 +36,11 @@ function parseCellValue(value) {
 async function run() {
   console.log("🚀 Starting Excel import…");
 
-  // 1️⃣ Connect to MongoDB
+  // Connect to MongoDB
   await mongoose.connect(process.env.MONGODB_URI);
   console.log("✅ Connected to MongoDB");
 
-  // 2️⃣ Load Excel file
+  // Load Excel file
   const excelPath = path.join(
     __dirname,
     "..",
@@ -86,9 +80,9 @@ async function run() {
       obj[key] = parseCellValue(cell.value);
     });
 
-    // Vul startdatetime in als die mist maar period er is
-    if ((!obj.startdatetime || obj.startdatetime === '') && obj.period) {
-        obj.startdatetime = obj.period;
+    // Use period as startdatetime if missing
+    if ((!obj.startdatetime || obj.startdatetime === "") && obj.period) {
+      obj.startdatetime = obj.period;
     }
 
     const doc = {
@@ -102,7 +96,7 @@ async function run() {
       raw: obj,
     };
 
-    // Validatie
+    // Validation
     if (!obj.location_id || !obj.startdatetime) return;
 
     measurements.push(doc);
@@ -159,7 +153,7 @@ async function run() {
 
   console.log("💾 Writing to database…");
 
-  // (optioneel) eerst leegmaken
+  // Clear existing data
   await Measurement.deleteMany({});
   await Location.deleteMany({});
 

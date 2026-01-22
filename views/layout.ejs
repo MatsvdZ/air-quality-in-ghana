@@ -46,13 +46,13 @@
         function bestMatchItem() {
           const p = window.location.pathname;
 
-          // Exact match eerst (/, /map, /download, /admin)
+          // Exact match first (/, /map, /download, /admin)
           let item =
             items.find((a) => a.getAttribute("href") === p) ||
-            // Daarna "startsWith" match (bv /admin/login -> /admin)
+            // Then prefix match (/map/..., /download/..., /admin/...)
             items.find((a) => p.startsWith(a.getAttribute("href") + "/"));
 
-          // Speciaal: root "/" mag niet alles matchen
+          // Fallbacks
           if (!item) {
             if (p.startsWith("/admin"))
               item = items.find((a) => a.getAttribute("href") === "/admin");
@@ -82,25 +82,24 @@
           indicator.style.transform = `translateX(${left}px)`;
         }
 
-        // ✅ On load: bepaal active tab op basis van URL
+        // Initial setup
         const initial = bestMatchItem();
         setActive(initial);
         moveIndicatorTo(initial);
 
-        // ✅ Op resize opnieuw uitlijnen
         window.addEventListener("resize", () => {
           const current = bestMatchItem();
           setActive(current);
           moveIndicatorTo(current);
         });
 
-        // ✅ Op click: eerst animatie, dan navigeren
+        // On click, delay navigation for indicator animation
         items.forEach((a) => {
           a.addEventListener("click", (e) => {
             const href = a.getAttribute("href");
             if (!href) return;
 
-            // als je al op dezelfde "sectie" zit, geen delay nodig
+            // If already on the same section, don't delay
             const p = window.location.pathname;
             const sameSection =
               (href === "/" && p === "/") ||

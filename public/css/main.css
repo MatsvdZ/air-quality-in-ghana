@@ -80,10 +80,10 @@ h1 {
 }
 
 /* =========================
-   2. CSS-variabelen
+   2. CSS-variables
    ========================= */
 :root {
-  /* Kleuren */
+  /* colors */
   --bg: linear-gradient(180deg, #f1f5f9 0%, #ffffff 100%);
   --nav-bg: #001540;
   --text: #0f172a;
@@ -94,7 +94,7 @@ h1 {
   --secondary-btn-border: #e2e8f0;
   --secondary-btn-text: #334155;
 
-  /* Kleuren - Gray */
+  /* colors - Gray */
   --gray-050: #f8fafc;
   --gray-100: #f1f5f9;
   --gray-200: #e2e8f0;
@@ -131,7 +131,7 @@ h1 {
   --shadow: 0 2px 8px 0 rgba(15, 23, 42, 0.06);
   --pad: var(--spacing-s);
 
-  /* Typografie */
+  /* Typography */
   --font: "Gilroy", sans-serif;
 
   /* Spacing */
@@ -151,7 +151,7 @@ h1 {
 /* =========================
    3. Layout & Components
    ========================= */
-/* DE KAART */
+/* THE MAP */
 div#mapView,
 .map-wrapper {
   position: relative;
@@ -164,7 +164,8 @@ div#mapView,
   border-radius: var(--components-card-corners);
   border: 1px solid var(--border);
   overflow: hidden;
-  height: clamp(420px, 70vh, 680px);}
+  height: clamp(420px, 70vh, 680px);
+}
 
 @media (max-width: 768px) {
   .map-wrapper {
@@ -178,7 +179,7 @@ div#mapView,
   }
 }
 
-/* INTERACTIEVE LEGENDA */
+/* INTERACTIVE LEGEND */
 .interactive-legend {
   position: absolute;
   bottom: 3rem;
@@ -189,7 +190,7 @@ div#mapView,
   user-select: none;
 }
 
-/* COMPACT: BALK */
+/* COMPACT: BAR */
 .legend-compact {
   background: rgba(255, 255, 255, 0.95);
   padding: 0.7rem;
@@ -225,7 +226,7 @@ div#mapView,
   font-weight: 700;
 }
 
-/* EXPANDED: LIJST */
+/* EXPANDED: LIST */
 .legend-expanded {
   display: none;
   background: rgba(255, 255, 255, 0.98);
@@ -296,7 +297,7 @@ div#mapView,
   }
 }
 
-/* LOGICA */
+/* LOGIC */
 .interactive-legend.is-open .legend-compact {
   display: none;
 }
@@ -360,7 +361,7 @@ div#mapView,
   justify-content: space-between;
 }
 
-/* TYPOGRAFIE HEADERS & ID'S */
+/* TYPOGRAPHY HEADERS & ID'S */
 .popup-title,
 .comp-title {
   margin: 0 0 0.25rem 0;
@@ -389,14 +390,7 @@ div#mapView,
   text-transform: uppercase;
 }
 
-/* SPECIFIEKE HEADER LAYOUT VOOR COMPARE CARDS */
-.comp-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-top: 0.5rem;
-}
-
+/* SPECIFIC HEADER LAYOUT FOR COMPARE CARDS */
 /* DATA CONTENT STYLING */
 .data-box {
   background-color: var(--secondary-btn-bg);
@@ -534,7 +528,7 @@ div#mapView,
   min-width: 2rem;
 }
 
-/* JAAR SELECT DROPDOWN */
+/* YEAR SELECT DROPDOWN */
 .year-select {
   width: auto;
   padding: 0 0.5rem;
@@ -858,7 +852,7 @@ div#mapView,
   flex: 1 1 auto;
 }
 
-/* Grote actie knop (Add to compare) */
+/* Large action button (Add to compare) */
 .action-btn {
   width: 100%;
   font-size: 0.875rem;
@@ -869,7 +863,7 @@ div#mapView,
   opacity: 0.9;
 }
 
-/* Sluit- en verwijder kruisjes */
+/* Close and remove buttons (cross icons) */
 .comp-remove-btn {
   cursor: pointer;
   color: var(--gray-400);
@@ -888,7 +882,7 @@ div#mapView,
   transition: color 0.2s;
 }
 
-/* Hover effect voor kruisjes */
+/* Hover effect for crosses */
 .comp-remove-btn:hover,
 .modal-close-btn:hover {
   color: var(--text);
@@ -911,7 +905,6 @@ div#mapView,
 }
 
 /* BOTTOM NAVIGATION */
-/* Bottom nav (pill, expandable active tab) */
 /* Bottom nav (pill, expandable active tab + smooth animation) */
 .bottom-nav {
   position: fixed;
@@ -928,14 +921,14 @@ div#mapView,
   z-index: 999;
 }
 
-/* de schuivende highlight */
+/* moving highlight */
 .bottom-nav__indicator {
   position: absolute;
   top: var(--spacing-xs);
   left: 0;
   height: calc(68px - var(--spacing-s));
   width: 80px;
-  /* wordt door JS overschreven */
+  /* Gets overriden by JS */
   border-radius: var(--components-navigation-bar-corner);
   background: var(--muted);
   transform: translateX(0);
@@ -1063,7 +1056,6 @@ div#mapView,
   }
 }
 
-/* Use the same field styles as admin UI */
 .table-filters .field {
   display: grid;
   gap: 6px;
@@ -1097,7 +1089,7 @@ div#mapView,
   box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.08);
 }
 
-/* SEARCH INPUT HINT ICON (OPTIONAL, SUBTLE) */
+/* SEARCH INPUT HINT ICON */
 #qFilter {
   padding-left: 12px;
 }
@@ -1133,7 +1125,7 @@ div#mapView,
   border-radius: var(--spacing-s);
 }
 
-/* ZORG DAT CONTENT NIET ONDER BOTTOM NAVBAR VERDWIJNT */
+/* MAKE SURE CONTENT DOESN'T DISAPPEAR BEHIND BOTTOMNAV  */
 #tableView {
   padding-bottom: 6em;
 }
@@ -1142,7 +1134,6 @@ div#mapView,
   width: 100%;
   border-collapse: collapse;
   min-width: 700px;
-  /* zodat hij niet te krap wordt op mobiel */
 }
 
 .data-table th,
@@ -1159,7 +1150,6 @@ div#mapView,
   background: white;
 }
 
-/* SIMPELE SWITCH */
 .switch {
   position: relative;
   display: inline-block;
@@ -1413,13 +1403,11 @@ textarea:focus {
   align-items: center;
   gap: 12px;
   padding: var(--spacing-xs) 12px;
-  /* iets compacter */
   border: 1px solid #e2e8f0;
   border-radius: 0.5rem;
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
-  /* voorkomt dat children buiten de card tekenen */
 }
 
 .rank-badge {
@@ -1458,9 +1446,7 @@ textarea:focus {
   font-weight: 900;
   color: var(--gradient-bar-green);
   flex: 0 1 auto;
-  /* 🔑 mag krimpen */
   min-width: 0;
-  /* 🔑 nodig voor ellipsis in flex */
   white-space: normal;
 }
 
@@ -1506,7 +1492,7 @@ details[open] .accordion__summary::after {
   content: "–";
 }
 
-/* Animatie basis */
+/* ANIMATION BASIS */
 .accordion__content {
   overflow: hidden;
   max-height: 0;
@@ -1554,13 +1540,11 @@ details[open] .accordion__content {
     gap: 18px;
   }
 
-  /* Kaartpreview breder: neemt 2 kolommen */
   .home-map-preview {
     grid-column: span 2;
     height: 280px;
   }
 
-  /* Ranking card netjes als 1 kolom */
   .grid > .card:first-child {
     grid-column: span 1;
   }
@@ -1577,7 +1561,6 @@ details[open] .accordion__content {
 }
 
 /* TOPNAV STYLING AND MEDIAQUERIES */
-/* ---------- Top navigation (desktop) ---------- */
 .top-nav {
   display: none;
   position: sticky;
@@ -1637,7 +1620,8 @@ details[open] .accordion__content {
   }
 }
 
-/* Desktop layout: NO2 + About naast elkaar */
+/* DESKTOP LAYOUT */
+
 @media (min-width: 780px) {
   .grid {
     display: grid;
@@ -1651,11 +1635,10 @@ details[open] .accordion__content {
     grid-column: span 1;
   }
 
-    .grid > * {
+  .grid > * {
     grid-column: auto;
   }
 
-  /* NO2 en About nemen elk één kolom */
   .card--no2,
   .card--about {
     grid-column: span 1;

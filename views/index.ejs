@@ -19,7 +19,7 @@
       <p class="ranking-note">Lowest NO₂ (latest month).</p>
     </article>
 
-    <!-- Mini map (zonder card eromheen) -->
+    <!-- Mini map -->
     <a href="/map" class="home-map-preview" aria-label="Open map">
       <div class="home-map-preview__inner"></div>
     </a>
@@ -122,7 +122,7 @@
       const res = await fetch("/api/locations");
       const allLocations = await res.json();
 
-      // 1) verzamel alle periods en pak de nieuwste
+      // Collect all unique periods
       const periodSet = new Set();
       allLocations.forEach((loc) => {
         (loc.history || []).forEach((h) => {
@@ -133,8 +133,6 @@
       const periods = Array.from(periodSet);
       if (!periods.length) return;
 
-      // dateStr is bij jou "MMM YYYY" (bijv. "Oct 2025")
-      // We sorteren op echte datum
       const toDate = (p) => {
         const d = new Date(p); // werkt voor "Oct 2025"
         return isNaN(d) ? new Date(0) : d;
@@ -143,7 +141,7 @@
       periods.sort((a, b) => toDate(a) - toDate(b));
       const latestPeriod = periods[periods.length - 1];
 
-      // 2) teken cirkels voor de nieuwste periode
+      // Plot locations with data for the latest period
       allLocations.forEach((loc) => {
         const lat = Number(loc.lat);
         const lon = Number(loc.lon);
@@ -152,14 +150,13 @@
         const m = (loc.history || []).find((h) => h.dateStr === latestPeriod);
         const v = m?.val;
 
-        // geen data? teken klein grijs puntje of skip
+        // No-data styling
         if (
           v === undefined ||
           v === null ||
           v === "" ||
           Number.isNaN(Number(v))
         ) {
-          // Wil je no-data helemaal niet tonen? return;
           const dot = L.circleMarker([lat, lon], {
             color: "rgba(255,255,255,.9)",
             weight: 1,
@@ -186,7 +183,6 @@
     }
   });
 
-  // Zelfde kleuren als je map.js
   function getColor(value) {
     if (value > 80) return "#7E0023";
     if (value > 70) return "#8F3F97";
@@ -240,7 +236,7 @@
     const summary = details.querySelector(".accordion__summary");
     const content = details.querySelector(".accordion__content");
 
-    // Helper: zet hoogte correct als hij open start
+    // Helper: set initial height
     if (details.open) {
       content.style.maxHeight = content.scrollHeight + "px";
     }
@@ -252,16 +248,16 @@
 
       if (isOpen) {
         // --- CLOSE (smooth) ---
-        // 1) Zet eerst current hoogte (van auto naar px)
+        // Current height as starting point
         content.style.maxHeight = content.scrollHeight + "px";
 
-        // 2) Force reflow zodat de browser dit "pakt"
+        // 2) Force reflow
         content.offsetHeight;
 
-        // 3) Animeer naar 0
+        // 3) Animate to max-height 0
         content.style.maxHeight = "0px";
 
-        // 4) Pas NA de animatie details sluiten (anders springt het)
+        // 4) Close after transition
         const onEnd = () => {
           details.open = false;
           content.removeEventListener("transitionend", onEnd);
@@ -269,21 +265,21 @@
         content.addEventListener("transitionend", onEnd);
       } else {
         // --- OPEN (smooth) ---
-        // 1) Open details eerst zodat content meetbaar is
+        // Open details first
         details.open = true;
 
-        // 2) Zet max-height naar 0 (startpunt)
+        // 2) Start from max-height 0
         content.style.maxHeight = "0px";
 
         // 3) Force reflow
         content.offsetHeight;
 
-        // 4) Animeer naar scrollHeight
+        // 4) Animate to full height
         content.style.maxHeight = content.scrollHeight + "px";
       }
     });
 
-    // Als content verandert (responsive), pas hoogte aan
+    // If content resizes, adjust maxHeight
     window.addEventListener("resize", () => {
       if (details.open) {
         content.style.maxHeight = content.scrollHeight + "px";
