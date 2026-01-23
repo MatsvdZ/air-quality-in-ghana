@@ -107,17 +107,15 @@ h1 {
   --gray-900: #0f172a;
 
   /* Gradient Bar */
-  --gradient-bar: linear-gradient(
-    to right,
-    #59b61f,
-    #a3bf29,
-    #eec732,
-    #ea8c34,
-    #da5634,
-    #c92033,
-    #8f3f97,
-    #7e0023
-  );
+  --gradient-bar: linear-gradient(to right,
+      #59b61f,
+      #a3bf29,
+      #eec732,
+      #ea8c34,
+      #da5634,
+      #c92033,
+      #8f3f97,
+      #7e0023);
   --gradient-bar-green: #59b61f;
   --gradient-bar-light-green: #a3bf29;
   --gradient-bar-yellow: #eec732;
@@ -388,6 +386,11 @@ div#mapView,
 
 .popup-desc::first-letter {
   text-transform: uppercase;
+}
+
+.comp-header-row {
+  display: flex;
+  justify-content: space-between;
 }
 
 /* SPECIFIC HEADER LAYOUT FOR COMPARE CARDS */
@@ -1000,6 +1003,7 @@ div#mapView,
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .bottom-nav__indicator,
   .bottom-nav__item,
   .bottom-nav__label {
@@ -1183,11 +1187,11 @@ div#mapView,
   box-shadow: 0 6px var(--spacing-s) rgba(2, 6, 23, 0.12);
 }
 
-.switch input:checked + .switch__slider {
+.switch input:checked+.switch__slider {
   background: var(--text);
 }
 
-.switch input:checked + .switch__slider:before {
+.switch input:checked+.switch__slider:before {
   transform: translateX(var(--spacing-s));
 }
 
@@ -1545,7 +1549,7 @@ details[open] .accordion__content {
     height: 280px;
   }
 
-  .grid > .card:first-child {
+  .grid>.card:first-child {
     grid-column: span 1;
   }
 }
@@ -1635,7 +1639,7 @@ details[open] .accordion__content {
     grid-column: span 1;
   }
 
-  .grid > * {
+  .grid>* {
     grid-column: auto;
   }
 
